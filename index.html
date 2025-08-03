@@ -31,6 +31,8 @@
             }
             #rotation-message {
                 display: none;
+        
+                
             }
         }
 
@@ -38,11 +40,12 @@
         table {
             border-collapse: separate;
             border-spacing: 0;
-            table-layout: fixed; /* Ensures equal width columns for players */
+            table-layout: fixed; /* Zorgt ervoor dat kolommen gelijke breedtes hebben */
+            width: 100%; /* Zorgt ervoor dat de tabel de volledige breedte van de container inneemt */
         }
         th, td {
             border: 1px solid #e5e7eb;
-            padding: 1rem;
+            padding: 0.5rem; /* Minder padding voor kleine schermen */
             vertical-align: top;
         }
         th {
@@ -56,17 +59,17 @@
         tr:hover {
             background-color: #e5e7eb;
         }
-        /* Responsive adjustment */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0.5rem;
-            }
-            .form-section, .score-table {
-                width: 100%;
-            }
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        /* Responsieve aanpassing voor de knoppen en tekst in de tabel */
+        td button,
+        td input,
+        td select {
+            font-size: 0.75rem; /* Kleinere lettergrootte voor kleine schermen */
+        }
+        .out-details button {
+            padding: 0.25rem 0.5rem;
+        }
+        .score-input-container {
+            padding: 0.5rem;
         }
         /* Class to highlight unconfigured rounds */
         .highlight-attention {
@@ -78,7 +81,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
 
     <!-- Dit wordt getoond als het scherm in portretmodus is -->
     <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
@@ -88,49 +91,49 @@
     </div>
 
     <!-- Dit wordt getoond als het scherm in landschapsmodus is -->
-    <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-4">
+    <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
         <!-- Main title and description -->
-        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
-            <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">Supër Score Calculator</h1>
-            <p class="text-center text-gray-600 mb-4">
+        <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+            <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1">Supër Score Calculator</h1>
+            <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
                 Voer de namen van de spelers en het aantal rondes in om de score bij te houden.
                 Negatieve punten zijn goed, positieve punten zijn slecht!
             </p>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Spelinstellingen</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Player names form -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Speler namen (max 4):</label>
-                    <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input type="text" id="player-name-1" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 1">
-                        <input type="text" id="player-name-2" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 2">
-                        <input type="text" id="player-name-3" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 3">
-                        <input type="text" id="player-name-4" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 4">
+                    <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
+                        <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
+                        <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
+                        <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
                     </div>
                 </div>
                 <!-- Number of rounds form -->
                 <div>
                     <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
-                    <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
             </div>
-            <button id="start-game-btn" class="mt-6 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors">Start Spel</button>
+            <button id="start-game-btn" class="mt-4 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
         </div>
 
         <!-- Score table is dynamically inserted here -->
-        <div id="score-container" class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8 hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Scorebord</h2>
+        <div id="score-container" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4 hidden">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
             <div class="overflow-x-auto">
                 <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
                     <thead></thead>
-                    <tbody></thead>
+                    <tbody></tbody>
                     <tfoot></tfoot>
                 </table>
             </div>
-            <button id="add-round-btn" class="mt-6 w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors">Ronde toevoegen</button>
+            <button id="add-round-btn" class="mt-4 w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Ronde toevoegen</button>
         </div>
     </div>
 
@@ -210,11 +213,11 @@
             // Functie om de HTML-tabel te renderen
             const renderScoreTable = () => {
                 // Table header row
-                let headerHtml = '<tr><th class="rounded-tl-2xl w-48">Ronde</th>';
+                let headerHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
                 players.forEach((player, pIndex) => {
                     const isLastPlayer = pIndex === players.length - 1;
                     const roundedClass = isLastPlayer ? 'rounded-tr-2xl' : '';
-                    headerHtml += `<th class="text-white bg-blue-500 ${roundedClass}">${player}</th>`;
+                    headerHtml += `<th class="text-white bg-blue-500 text-sm ${roundedClass}">${player}</th>`;
                 });
                 headerHtml += '</tr>';
                 scoreTableHead.innerHTML = headerHtml;
@@ -228,26 +231,26 @@
                     const isRoundConfigured = roundSettings[i].kistergeCard !== '-1' && roundSettings[i].suit !== 'geen';
 
                     bodyHtml += `<tr>
-                        <td class="font-bold">
+                        <td class="font-bold text-sm">
                             Ronde ${i + 1}
-                            <div id="round-settings-${i}" class="mt-2 space-y-2 text-sm ${isRoundConfigured ? '' : 'highlight-attention'}">
+                            <div id="round-settings-${i}" class="mt-1 space-y-1 text-xs ${isRoundConfigured ? '' : 'highlight-attention'}">
                                 <div>
                                     <label class="block font-medium text-gray-700">Gedraaide kaart:</label>
-                                    <select id="suit-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                    <select id="suit-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                                         <option value="geen" ${roundSettings[i].suit === 'geen' ? 'selected' : ''}>♣️♠️♦️♥️</option>
-                                        <option value="klaver" ${roundSettings[i].suit === 'klaver' ? 'selected' : ''}>♣️ Klaver (x2)</option>
-                                        <option value="schoppen" ${roundSettings[i].suit === 'schoppen' ? 'selected' : ''}>♠️ Schoppen (x3)</option>
-                                        <option value="ruiten" ${roundSettings[i].suit === 'ruiten' ? 'selected' : ''}>♦️ Ruiten (x4)</option>
-                                        <option value="harten" ${roundSettings[i].suit === 'harten' ? 'selected' : ''}>♥️ Harten (x5)</option>
+                                        <option value="klaver" ${roundSettings[i].suit === 'klaver' ? 'selected' : ''}>♣️ (x2)</option>
+                                        <option value="schoppen" ${roundSettings[i].suit === 'schoppen' ? 'selected' : ''}>♠️ (x3)</option>
+                                        <option value="ruiten" ${roundSettings[i].suit === 'ruiten' ? 'selected' : ''}>♦️ (x4)</option>
+                                        <option value="harten" ${roundSettings[i].suit === 'harten' ? 'selected' : ''}>♥️ (x5)</option>
                                     </select>
-                                    <select id="kisterge-card-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                    <select id="kisterge-card-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
                                         <option value="-1">Geen</option>
                                         ${kistergeCardValues.map(card => `<option value="${card.value}" ${roundSettings[i].kistergeCard === card.value ? 'selected' : ''}>${card.text}</option>`).join('')}
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block font-medium text-gray-700">Speler met "Kisterge":</label>
-                                    <select id="kisterge-player-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" ${isRoundConfigured ? '' : 'disabled'}>
+                                    <select id="kisterge-player-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" ${isRoundConfigured ? '' : 'disabled'}>
                                         <option value="-1">Geen</option>
                                         ${players.map((p, pIdx) => `<option value="${pIdx}" ${parseInt(kistergePlayerIndex) === pIdx ? 'selected' : ''}>${p}</option>`).join('')}
                                     </select>
@@ -270,27 +273,25 @@
 
 
                         bodyHtml += `<td>
-                            <div class="score-input-container p-2 rounded-lg bg-gray-50 border-gray-200 border">
+                            <div class="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">
                                 <button id="out-btn-${pIndex}-${i}" onclick="window.toggleOutStatus(${i}, ${pIndex})"
-                                    class="w-full py-2 px-4 rounded-lg font-bold transition-colors mb-2 text-white flex items-center justify-center space-x-2
+                                    class="w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2
                                     ${buttonClass}
                                     ${isDisabledButton ? 'opacity-50 cursor-not-allowed' : ''}"
                                     ${isDisabledButton ? 'disabled' : ''}>
                                     ${buttonIcon}
                                 </button>
-                                <div id="out-details-${pIndex}-${i}" class="out-details mt-2 space-y-2 ${!isOutPlayer ? 'hidden' : ''}">
-                                    <div class="flex justify-center">
-                                        <button id="standaard-btn-${i}" onclick="window.setOutType(${i}, 'standaard')" class="px-1.5 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standaardClass}" ${isDisabledButton ? 'disabled' : ''}>Standaard</button>
-                                        <button id="joker-btn-${i}" onclick="window.setOutType(${i}, 'joker')" class="px-1.5 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerClass}" ${isDisabledButton ? 'disabled' : ''}>Joker</button>
-                                    </div>
+                                <div id="out-details-${pIndex}-${i}" class="out-details mt-1 space-y-1 flex justify-center ${!isOutPlayer ? 'hidden' : ''}">
+                                    <button id="standaard-btn-${i}" onclick="window.setOutType(${i}, 'standaard')" class="px-1 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standaardClass}" ${isDisabledButton ? 'disabled' : ''}>Standaard</button>
+                                    <button id="joker-btn-${i}" onclick="window.setOutType(${i}, 'joker')" class="px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerClass}" ${isDisabledButton ? 'disabled' : ''}>Joker</button>
                                 </div>
-                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-2 space-y-2 ${isOutPlayer ? 'hidden' : ''}">
+                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-1 space-y-1 ${isOutPlayer ? 'hidden' : ''}">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Aantal restkaarten:</label>
-                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-1 block w-full px-3 py-1.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" value="${getLeftoverCards(pIndex, i)}" min="0" ${isDisabledInput ? 'disabled' : ''}>
+                                        <label class="block text-xs font-medium text-gray-700">Restkaarten:</label>
+                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${getLeftoverCards(pIndex, i)}" min="0" ${isDisabledInput ? 'disabled' : ''}>
                                     </div>
                                 </div>
-                                <p id="score-display-${pIndex}-${i}" class="mt-2 text-lg font-bold text-center p-2 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>
+                                <p id="score-display-${pIndex}-${i}" class="mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>
                             </div>
                         </td>`;
                     });
@@ -309,9 +310,9 @@
 
             // Update total scores in the table footer
             const updateTotals = () => {
-                let playerNamesHtml = '<tr><td class="font-bold"></td>';
+                let playerNamesHtml = '<tr><td class="font-bold text-sm"></td>';
                 players.forEach(player => {
-                    playerNamesHtml += `<td class="text-white bg-blue-500">${player}</td>`;
+                    playerNamesHtml += `<td class="text-white bg-blue-500 text-sm">${player}</td>`;
                 });
                 playerNamesHtml += '</tr>';
 
@@ -322,7 +323,7 @@
                 totalScores.forEach((total, tIndex) => {
                     const isLastTotal = tIndex === totalScores.length - 1;
                     const roundedClass = isLastTotal ? 'rounded-br-2xl' : '';
-                    totalScoresHtml += `<td class="text-xl font-bold bg-gray-200 text-center ${roundedClass}">${total}</td>`;
+                    totalScoresHtml += `<td class="text-lg font-bold bg-gray-200 text-center ${roundedClass}">${total}</td>`;
                 });
                 totalScoresHtml += '</tr>';
 
