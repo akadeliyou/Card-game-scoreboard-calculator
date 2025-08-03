@@ -160,7 +160,13 @@
   <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
     <!-- Header en beschrijving -->
     <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
-      <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1">Supër Score Calculator</h1>
+      <div class="flex justify-between items-center">
+        <a href="./index.html" class="bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded-lg text-xs hover:bg-gray-300">
+          ← Terug naar menu
+        </a>
+        <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1 flex-grow">Supër Score Calculator</h1>
+        <div class="w-20"></div> <!-- Placeholder om de titel te centreren -->
+      </div>
       <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
         Voer de namen van de spelers en het aantal rondes in om de score bij te houden. Negatieve punten zijn goed, positieve punten zijn slecht!
       </p>
@@ -317,7 +323,7 @@
           outPlayer: null,
           outType: 'standaard',
           kistergePlayer: -1,
-          leftoverCards: playerNames.map(() => 0) // Nieuw: array om restkaarten bij te houden
+          leftoverCards: playerNames.map(() => 0)
         }));
         isTeamMode = playerNames.length === 4 && teamModeCheckbox.checked;
 
@@ -612,6 +618,8 @@
         if (!roundData[roundIndex]) return;
 
         roundData[roundIndex].outType = type;
+        // Opgeloste bug: de tabel wordt opnieuw gerenderd om de knopstijl bij te werken
+        renderTable(); 
         window.recalculateRoundScores(roundIndex);
       };
       
