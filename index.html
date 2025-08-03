@@ -1,700 +1,645 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
-    <title>Supër Score Calculator</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1f2937; /* Donkere achtergrond voor consistentie */
-        }
-
-        /* Verberg de content en toon de rotatieboodschap in portretmodus */
-        @media only screen and (orientation: portrait) {
-            #main-content {
-                display: none;
-            }
-            #rotation-message {
-                display: flex;
-            }
-        }
-        
-        /* Toon de content en verberg de rotatieboodschap in landschapsmodus */
-        @media only screen and (orientation: landscape) {
-            #main-content {
-                display: block;
-            }
-            #rotation-message {
-                display: none;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
+  <title>Supër Score Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1f2937;
     }
 
-        /* Extra styling for the table */
-        table {
-            border-collapse: separate;
-            border-spacing: 0;
-            table-layout: fixed; /* Zorgt ervoor dat kolommen gelijke breedtes hebben */
-            width: 100%; /* Zorgt ervoor dat de tabel de volledige breedte van de container inneemt */
-            max-width: 900px; /* Maakt de tabel smaller */
-        }
-        th, td {
-            border: 1px solid #e5e7eb;
-            padding: 0.5rem; /* Minder padding voor kleine schermen */
-            vertical-align: top;
-            position: relative; /* Voor de absolute positionering van de kaart */
-        }
-        th {
-            background-color: #1f2937;
-            color: #ffffff;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        tr:hover {
-            background-color: #e5e7eb;
-        }
-        /* Responsieve aanpassing voor de knoppen en tekst in de tabel */
-        td button,
-        td input,
-        td select {
-            font-size: 0.75rem; /* Kleinere lettergrootte voor kleine schermen */
-        }
-        .out-details button {
-            padding: 0.25rem 0.5rem;
-        }
-        .score-input-container {
-            padding: 0.5rem;
-        }
-        /* Class to highlight unconfigured rounds */
-        .highlight-attention {
-            border: 2px solid #ef4444; /* red-500 */
-            border-radius: 0.5rem;
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
-            transition: all 0.3s ease-in-out;
-            padding: 0.5rem;
-        }
-        /* Team colors */
-        .team-a-header {
-            background-color: #2563eb; /* blue-600 */
-        }
-        .team-b-header {
-            background-color: #1d4ed8; /* blue-700 */
-        }
-        .team-a-total-cell {
-            background-color: #93c5fd; /* blue-300 */
-        }
-        .team-b-total-cell {
-            background-color: #60a5fa; /* blue-400 */
-        }
-        /* Card display styles */
-        .card-display {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 32px;
-            height: 43px;
-            background-color: #ffffff;
-            border: 1px solid #000;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-            padding: 2px;
-            line-height: 1;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .card-value {
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .card-suit {
-            font-size: 16px;
-        }
-        .text-red {
-            color: #ef4444; /* red-500 */
-        }
-        .text-black {
-            color: #1f2937; /* gray-800 */
-        }
-        /* New class for the winning team's columns */
-        .winning-team-cell {
-            background-color: #d1fae5; /* green-100 */
-        }
-    </style>
+    /* Styles voor de landschap/portretmodus */
+    @media only screen and (orientation: portrait) {
+      #main-content {
+        display: none;
+      }
+      #rotation-message {
+        display: flex;
+      }
+    }
+    @media only screen and (orientation: landscape) {
+      #main-content {
+        display: block;
+      }
+      #rotation-message {
+        display: none;
+      }
+    }
+
+    /* Tabel styling */
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      width: 100%;
+      max-width: 900px;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: .5rem;
+      vertical-align: top;
+      position: relative;
+    }
+    th {
+      background-color: #1f2937;
+      color: #fff;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    tr:hover {
+      background-color: #e5e7eb;
+    }
+    td button, td input, td select {
+      font-size: .75rem;
+    }
+    .out-details button {
+      padding: .25rem .5rem;
+    }
+    .score-input-container {
+      padding: .5rem;
+    }
+    .highlight-attention {
+      border: 2px solid #ef4444;
+      border-radius: .5rem;
+      box-shadow: 0 0 8px rgba(239, 68, 68, .4);
+      transition: all .3s ease-in-out;
+      padding: .5rem;
+    }
+    .team-a-header {
+      background-color: #2563eb;
+    }
+    .team-b-header {
+      background-color: #1d4ed8;
+    }
+    .team-a-total-cell {
+      background-color: #93c5fd;
+    }
+    .team-b-total-cell {
+      background-color: #60a5fa;
+    }
+    .card-display {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 32px;
+      height: 43px;
+      background-color: #fff;
+      border: 1px solid #000;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      padding: 2px;
+      line-height: 1;
+      z-index: 10;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+    }
+    .card-value {
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .card-suit {
+      font-size: 16px;
+    }
+    .text-red {
+      color: #ef4444;
+    }
+    .text-black {
+      color: #1f2937;
+    }
+    .winning-team-cell {
+      background-color: #d1fae5;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
 
-    <!-- Dit wordt getoond als het scherm in portretmodus is -->
-    <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
-        <div class="mb-4 text-6xl">🔄</div>
-        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
-        <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
+  <!-- Bericht voor portretmodus -->
+  <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
+    <div class="mb-4 text-6xl">🔄</div>
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
+    <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
+  </div>
+
+  <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
+    <!-- Header en beschrijving -->
+    <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+      <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1">Supër Score Calculator</h1>
+      <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
+        Voer de namen van de spelers en het aantal rondes in om de score bij te houden. Negatieve punten zijn goed, positieve punten zijn slecht!
+      </p>
     </div>
 
-    <!-- Dit wordt getoond als het scherm in landschapsmodus is -->
-    <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
-        <!-- Main title and description -->
-        <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
-            <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1">Supër Score Calculator</h1>
-            <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
-                Voer de namen van de spelers en het aantal rondes in om de score bij te houden.
-                Negatieve punten zijn goed, positieve punten zijn slecht!
-            </p>
+    <!-- Spelinstellingen -->
+    <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Speler namen (min. 2, max. 4):</label>
+          <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
+            <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
+            <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
+            <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
+          </div>
         </div>
-
-        <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Player names form -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Speler namen (min. 2, max. 4):</label>
-                    <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
-                        <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
-                        <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
-                        <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
-                    </div>
-                </div>
-                <!-- Number of rounds form -->
-                <div>
-                    <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
-                    <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                    <!-- Team mode option for 4 players -->
-                    <div id="team-mode-container" class="mt-3 hidden">
-                        <div class="flex items-center">
-                            <input id="team-mode-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                            <label for="team-mode-checkbox" class="ml-2 block text-sm font-medium text-gray-700">
-                                Schakel teammodus in (2 tegen 2)
-                            </label>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">Team A: Speler 1 & 2 | Team B: Speler 3 & 4</p>
-                    </div>
-                </div>
+        <div>
+          <!-- Het invoerveld voor het aantal rondes is verwijderd -->
+          <div id="team-mode-container" class="mt-3 hidden">
+            <div class="flex items-center">
+              <input id="team-mode-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+              <label for="team-mode-checkbox" class="ml-2 block text-sm font-medium text-gray-700">Schakel teammodus in (2 tegen 2)</label>
             </div>
-            <!-- Player count error message -->
-            <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">
-                Het spel kan niet worden gestart met 1 speler. Zoek vrienden!
-            </div>
-            <!-- Dynamic buttons for starting, updating or resetting the game -->
-            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
-                <button id="start-game-btn" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
-                <button id="update-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Instellingen toepassen</button>
-                <button id="reset-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Reset Spel</button>
-            </div>
+            <p class="text-xs text-gray-500 mt-1">Team A: Speler 1 & 2 | Team B: Speler 3 & 4</p>
+          </div>
         </div>
-
-        <!-- Score table is dynamically inserted here -->
-        <div id="score-container" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4 hidden">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
-            <div class="overflow-x-auto">
-                <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
-                    <thead></thead>
-                    <tbody></tbody>
-                    <tfoot></tfoot>
-                </table>
-            </div>
-            <button id="add-round-btn" class="mt-4 w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Ronde toevoegen</button>
-        </div>
+      </div>
+      <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Het spel kan niet worden gestart met 1 speler. Zoek vrienden!</div>
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+        <button id="start-game-btn" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
+        <button id="update-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Instellingen toepassen</button>
+        <button id="reset-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Reset Spel</button>
+      </div>
     </div>
 
-    <!-- JavaScript for the score logic -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const startGameBtn = document.getElementById('start-game-btn');
-            const updateGameBtn = document.getElementById('update-game-btn');
-            const numRoundsInput = document.getElementById('num-rounds');
-            const scoreContainer = document.getElementById('score-container');
-            const scoreTableHead = document.querySelector('#score-table thead');
-            const scoreTableBody = document.querySelector('#score-table tbody');
-            const scoreTableFoot = document.querySelector('#score-table tfoot');
-            const addRoundBtn = document.getElementById('add-round-btn');
-            const resetGameBtn = document.getElementById('reset-game-btn');
-            const playerCountErrorDiv = document.getElementById('player-count-error');
-            const teamModeContainer = document.getElementById('team-mode-container');
-            const teamModeCheckbox = document.getElementById('team-mode-checkbox');
-            const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
+    <!-- Scorebord -->
+    <div id="score-container" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4 hidden">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
+      <div class="overflow-x-auto">
+        <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <button id="add-round-btn" class="mt-4 w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Ronde toevoegen</button>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="w-full text-center py-4 text-gray-400 text-sm">Made by AE</footer>
 
-            let players = [];
-            let scores = [];
-            let roundSettings = [];
-            let rounds = 0;
-            let isTeamMode = false;
+  <script>
+    // Wacht tot de DOM volledig geladen is
+    document.addEventListener('DOMContentLoaded', () => {
 
-            const multipliers = {
-                'klaver': 2,
-                'schoppen': 3,
-                'ruiten': 4,
-                'harten': 5
-            };
-            
-            const kistergeCardValues = [
-                { value: 'A', text: 'A (-10)' },
-                { value: '2', text: '2 (-20)' },
-                { value: '3', text: '3 (-30)' },
-                { value: '4', text: '4 (-40)' },
-                { value: '5', text: '5 (-50)' },
-                { value: '6', text: '6 (-60)' },
-                { value: '7', text: '7 (-70)' },
-                { value: '8', text: '8 (-80)' },
-                { value: '9', text: '9 (-90)' },
-                { value: '10', text: '10 (-100)' },
-                { value: 'B', text: 'Boer (-100)' },
-                { value: 'V', text: 'Vrouw (-100)' },
-                { value: 'H', text: 'Heer (-100)' }
-            ];
+      // Haal alle benodigde DOM-elementen op
+      const startGameBtn = document.getElementById('start-game-btn');
+      const updateGameBtn = document.getElementById('update-game-btn');
+      // Verwijderde: const numRoundsInput = document.getElementById('num-rounds');
+      const scoreContainer = document.getElementById('score-container');
+      const scoreTableHead = document.querySelector('#score-table thead');
+      const scoreTableBody = document.querySelector('#score-table tbody');
+      const scoreTableFoot = document.querySelector('#score-table tfoot');
+      const addRoundBtn = document.getElementById('add-round-btn');
+      const resetGameBtn = document.getElementById('reset-game-btn');
+      const playerCountError = document.getElementById('player-count-error');
+      const teamModeContainer = document.getElementById('team-mode-container');
+      const teamModeCheckbox = document.getElementById('team-mode-checkbox');
+      const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
 
-            const suitDetails = {
-                'klaver': { emoji: '♣️', color: 'text-black' },
-                'schoppen': { emoji: '♠️', color: 'text-black' },
-                'ruiten': { emoji: '♦️', color: 'text-red' },
-                'harten': { emoji: '♥️', color: 'text-red' }
-            };
+      // Globale variabelen voor de spelstaat
+      let playerNames = [];
+      let playerScores = [];
+      let roundData = [];
+      let numRounds = 0; // Wordt dynamisch beheerd
+      let isTeamMode = false;
 
-            // Functie om de teammodus optie te tonen/verbergen
-            const updateTeamModeOption = () => {
-                const filledNames = playerNameInputs.map(input => input.value.trim());
-                const playerCount = filledNames.filter(name => name !== '').length;
-                if (playerCount === 4) {
-                    teamModeContainer.classList.remove('hidden');
-                } else {
-                    teamModeContainer.classList.add('hidden');
-                    teamModeCheckbox.checked = false; // Reset checkbox if not 4 players
-                }
-            };
-            
-            // Event listeners for player name inputs to update team mode option
-            playerNameInputs.forEach(input => {
-                input.addEventListener('input', updateTeamModeOption);
-            });
+      // Configuratie voor het spel
+      const suitMultipliers = {
+        'klaver': 2,
+        'schoppen': 3,
+        'ruiten': 4,
+        'harten': 5
+      };
 
-            // Functie om het spel voor de eerste keer te starten
-            startGameBtn.addEventListener('click', () => {
-                const names = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
-                
-                // Check if there are enough players
-                if (names.length < 2) {
-                    playerCountErrorDiv.classList.remove('hidden');
-                    return;
-                }
-                
-                playerCountErrorDiv.classList.add('hidden');
-                
-                // Show the score container and the update button
-                scoreContainer.classList.remove('hidden');
-                startGameBtn.classList.add('hidden');
-                updateGameBtn.classList.remove('hidden');
-                resetGameBtn.classList.remove('hidden'); // Show reset button
+      const kistergeCardPoints = [
+        { value: 'A', text: 'A (-10)' },
+        { value: '2', text: '2 (-20)' },
+        { value: '3', text: '3 (-30)' },
+        { value: '4', text: '4 (-40)' },
+        { value: '5', text: '5 (-50)' },
+        { value: '6', text: '6 (-60)' },
+        { value: '7', text: '7 (-70)' },
+        { value: '8', text: '8 (-80)' },
+        { value: '9', text: '9 (-90)' },
+        { value: '10', text: '10 (-100)' },
+        { value: 'B', text: 'Boer (-100)' },
+        { value: 'V', text: 'Vrouw (-100)' },
+        { value: 'H', text: 'Heer (-100)' }
+      ];
 
-                // Adjust the width of the update button
-                updateGameBtn.classList.remove('w-full');
-                updateGameBtn.classList.add('sm:w-1/2');
-                
-                players = names;
-                rounds = parseInt(numRoundsInput.value);
-                scores = players.map(() => Array(rounds).fill(0));
-                roundSettings = Array(rounds).fill(null).map(() => ({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 }));
-                isTeamMode = players.length === 4 && teamModeCheckbox.checked;
+      const suitDetails = {
+        'klaver': { emoji: '♣️', color: 'text-black' },
+        'schoppen': { emoji: '♠️', color: 'text-black' },
+        'ruiten': { emoji: '♦️', color: 'text-red' },
+        'harten': { emoji: '♥️', color: 'text-red' }
+      };
 
-                renderScoreTable();
+      // Functie om de teammodus UI te tonen/verbergen
+      const updateTeamModeUI = () => {
+        const playerCount = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '').length;
+        if (playerCount === 4) {
+          teamModeContainer.classList.remove('hidden');
+        } else {
+          teamModeContainer.classList.add('hidden');
+          teamModeCheckbox.checked = false;
+        }
+      };
+      
+      // Voeg een event listener toe voor de invoervelden van de spelernamen
+      playerNameInputs.forEach(input => {
+        input.addEventListener('input', updateTeamModeUI);
+      });
 
-                // Scroll automatically to the scoreboard
-                scoreContainer.scrollIntoView({ behavior: 'smooth' });
-            });
+      // Functie voor het starten van het spel
+      startGameBtn.addEventListener('click', () => {
+        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
+        if (activePlayerNames.length < 2) {
+          playerCountError.classList.remove('hidden');
+          return;
+        }
+        
+        playerCountError.classList.add('hidden');
+        scoreContainer.classList.remove('hidden');
+        startGameBtn.classList.add('hidden');
+        updateGameBtn.classList.remove('hidden');
+        resetGameBtn.classList.remove('hidden');
+        updateGameBtn.classList.remove('w-full');
+        updateGameBtn.classList.add('sm:w-1/2');
 
-            // Functie om de spelinstellingen te updaten na de start
-            updateGameBtn.addEventListener('click', () => {
-                const newNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
-                
-                if (newNames.length < 2) {
-                    playerCountErrorDiv.classList.remove('hidden');
-                    return;
-                }
-                
-                playerCountErrorDiv.classList.add('hidden');
-                
-                const newRounds = parseInt(numRoundsInput.value);
-                const oldPlayersCount = players.length;
-                const newPlayersCount = newNames.length;
-                
-                if (newPlayersCount !== oldPlayersCount) {
-                    const newScores = Array(newPlayersCount).fill(null).map((_, pIndex) => {
-                        const playerScores = scores[pIndex] || [];
-                        const paddedScores = playerScores.slice(0, newRounds).concat(Array(Math.max(0, newRounds - playerScores.length)).fill(0));
-                        return paddedScores;
-                    });
-                    scores = newScores;
-                }
-                
-                players = newNames;
-                
-                if (newRounds !== rounds) {
-                    if (newRounds > rounds) {
-                        const roundsToAdd = newRounds - rounds;
-                        for (let i = 0; i < roundsToAdd; i++) {
-                             scores.forEach(playerScores => playerScores.push(0));
-                             roundSettings.push({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 });
-                        }
-                    } else if (newRounds < rounds) {
-                        scores.forEach(playerScores => playerScores.length = newRounds);
-                        roundSettings.length = newRounds;
-                    }
-                    rounds = newRounds;
-                }
+        playerNames = activePlayerNames;
+        numRounds = 1; // Start altijd met 1 ronde
+        playerScores = playerNames.map(() => Array(numRounds).fill(0));
+        roundData = Array(numRounds).fill(null).map(() => ({
+          suit: 'geen',
+          kistergeCard: '-1',
+          outPlayer: null,
+          outType: 'standaard',
+          kistergePlayer: -1
+        }));
+        isTeamMode = playerNames.length === 4 && teamModeCheckbox.checked;
 
-                isTeamMode = players.length === 4 && teamModeCheckbox.checked;
-                renderScoreTable();
-            });
+        renderTable();
+        scoreContainer.scrollIntoView({ behavior: 'smooth' });
+      });
 
-            // Functie om een nieuwe ronde toe te voegen
-            addRoundBtn.addEventListener('click', () => {
-                rounds++;
-                scores.forEach(playerScores => playerScores.push(0));
-                roundSettings.push({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 });
-                numRoundsInput.value = rounds; // Update the rounds input field
-                renderScoreTable();
-            });
+      // Functie voor het updaten van de spelinstellingen
+      updateGameBtn.addEventListener('click', () => {
+        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
+        if (activePlayerNames.length < 2) {
+          playerCountError.classList.remove('hidden');
+          return;
+        }
+        
+        playerCountError.classList.add('hidden');
+        const oldPlayerCount = playerNames.length;
+        const newPlayerCount = activePlayerNames.length;
 
-            // Functie om het hele spel te resetten
-            resetGameBtn.addEventListener('click', () => {
-                // Clear all game state
-                players = [];
-                scores = [];
-                roundSettings = [];
-                rounds = 0;
-                isTeamMode = false;
+        // Pas de scores aan als het aantal spelers is veranderd
+        if (newPlayerCount !== oldPlayerCount) {
+          const newPlayerScores = Array(newPlayerCount).fill(null).map((_, playerIndex) => {
+            const oldScores = playerScores[playerIndex] || [];
+            return oldScores.slice(0, numRounds).concat(Array(Math.max(0, numRounds - oldScores.length)).fill(0));
+          });
+          playerScores = newPlayerScores;
+        }
 
-                // Reset UI elements
-                playerNameInputs.forEach(input => input.value = '');
-                numRoundsInput.value = '1';
-                teamModeCheckbox.checked = false;
-                teamModeContainer.classList.add('hidden');
+        playerNames = activePlayerNames;
+        isTeamMode = playerNames.length === 4 && teamModeCheckbox.checked;
+        renderTable();
+      });
 
-                // Hide score table and show start button
-                scoreContainer.classList.add('hidden');
-                startGameBtn.classList.remove('hidden');
-                updateGameBtn.classList.add('hidden');
-                resetGameBtn.classList.add('hidden'); // Hide reset button
-                
-                // Adjust the width of the start button
-                startGameBtn.classList.remove('sm:w-1/2');
-                startGameBtn.classList.add('w-full');
-                
-                scoreTableHead.innerHTML = '';
-                scoreTableBody.innerHTML = '';
-                scoreTableFoot.innerHTML = '';
-            });
-
-            // Functie om de HTML-tabel te renderen
-            const renderScoreTable = () => {
-                let headerHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
-                players.forEach((player, pIndex) => {
-                    const isLastPlayer = pIndex === players.length - 1;
-                    const roundedClass = isLastPlayer ? 'rounded-tr-2xl' : '';
-                    const teamClass = isTeamMode && pIndex >= 2 ? 'team-b-header' : 'team-a-header';
-                    headerHtml += `<th class="text-white text-sm ${roundedClass} ${teamClass}">${player}</th>`;
-                });
-                headerHtml += '</tr>';
-                scoreTableHead.innerHTML = headerHtml;
-
-                let bodyHtml = '';
-                for (let i = 0; i < rounds; i++) {
-                    if (!roundSettings[i]) {
-                         roundSettings[i] = { suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 };
-                    }
-                    const outPlayerIndex = roundSettings[i].outPlayer;
-                    const kistergePlayerIndex = roundSettings[i].kistergePlayer;
-                    const isRoundConfigured = roundSettings[i].kistergeCard !== '-1' && roundSettings[i].suit !== 'geen';
-                    const roundSuit = roundSettings[i].suit;
-                    
-                    let cardDisplayHtml = '';
-                    if (isRoundConfigured) {
-                        const suitEmoji = suitDetails[roundSuit].emoji;
-                        const suitColorClass = suitDetails[roundSuit].color;
-                        const cardText = kistergeCardValues.find(c => c.value === roundSettings[i].kistergeCard).value;
-                        cardDisplayHtml = `<div class="card-display"><span class="card-value ${suitColorClass}">${cardText}</span><span class="card-suit ${suitColorClass}">${suitEmoji}</span></div>`;
-                    }
-
-                    bodyHtml += `<tr>
-                        <td class="font-bold text-sm">
-                            Ronde ${i + 1}
-                            ${cardDisplayHtml}
-                            <div id="round-settings-${i}" class="mt-1 space-y-1 text-xs ${isRoundConfigured ? '' : 'highlight-attention'}">
-                                <div>
-                                    <label class="block font-medium text-gray-700">Gedraaide kaart:</label>
-                                    <select id="suit-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                        <option value="geen" ${roundSettings[i].suit === 'geen' ? 'selected' : ''}>♣️♠️♦️♥️</option>
-                                        <option value="klaver" ${roundSettings[i].suit === 'klaver' ? 'selected' : ''}>♣️ (x2)</option>
-                                        <option value="schoppen" ${roundSettings[i].suit === 'schoppen' ? 'selected' : ''}>♠️ (x3)</option>
-                                        <option value="ruiten" ${roundSettings[i].suit === 'ruiten' ? 'selected' : ''}>♦️ (x4)</option>
-                                        <option value="harten" ${roundSettings[i].suit === 'harten' ? 'selected' : ''}>♥️ (x5)</option>
-                                    </select>
-                                    <select id="kisterge-card-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                                        <option value="-1">Geen</option>
-                                        ${kistergeCardValues.map(card => `<option value="${card.value}" ${roundSettings[i].kistergeCard === card.value ? 'selected' : ''}>${card.text}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block font-medium text-gray-700">Speler met "Kisterge":</label>
-                                    <select id="kisterge-player-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" ${isRoundConfigured ? '' : 'disabled'}>
-                                        <option value="-1">Geen</option>
-                                        ${players.map((p, pIdx) => `<option value="${pIdx}" ${parseInt(kistergePlayerIndex) === pIdx ? 'selected' : ''}>${p}</option>`).join('')}
-                                    </select>
-                                </div>
-                            </div>
-                        </td>`;
-                    players.forEach((player, pIndex) => {
-                        const score = scores[pIndex] && scores[pIndex][i] !== undefined ? scores[pIndex][i] : 0;
-                        const isOutPlayer = roundSettings[i].outPlayer === pIndex;
-                        const isDisabledButton = !isRoundConfigured;
-                        const outPlayerIndex = roundSettings[i].outPlayer;
-                        const outType = roundSettings[i].outType;
-                        const standaardClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
-                        const jokerClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
-                        
-                        // Check if the current player is on the winning team
-                        const isWinningTeam = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex);
-                        
-                        // Determine button icon and class based on winner status
-                        const buttonIcon = (isOutPlayer || isWinningTeam) ? '🏆' : (outPlayerIndex !== null ? '❌' : '🏆');
-                        const buttonClass = (isOutPlayer || isWinningTeam) ? 'bg-green-500' : (outPlayerIndex !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
-                        
-                        const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex) && !isOutPlayer;
-                        const isDisabledInput = !isRoundConfigured || isOutPlayer || isTeammateOfWinner;
-
-                        bodyHtml += `<td class="${isWinningTeam ? 'winning-team-cell' : ''}">
-                            <div class="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">
-                                <button id="out-btn-${pIndex}-${i}" onclick="window.toggleOutStatus(${i}, ${pIndex})"
-                                    class="w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2
-                                    ${buttonClass}
-                                    ${isDisabledButton ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${isDisabledButton ? 'disabled' : ''} tabindex="-1">
-                                    ${buttonIcon}
-                                </button>
-                                <div id="out-details-${pIndex}-${i}" class="out-details mt-1 space-y-1 flex justify-center ${!isOutPlayer ? 'hidden' : ''}">
-                                    <button id="standaard-btn-${i}" onclick="window.setOutType(${i}, 'standaard')" class="px-1 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standaardClass}" ${isDisabledButton ? 'disabled' : ''}>Standaard</button>
-                                    <button id="joker-btn-${i}" onclick="window.setOutType(${i}, 'joker')" class="px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerClass}" ${isDisabledButton ? 'disabled' : ''}>Joker</button>
-                                </div>
-                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-1 space-y-1 ${isDisabledInput ? 'hidden' : ''}">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700">Restkaarten:</label>
-                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${scores[pIndex][i] > 0 && multipliers[roundSuit] ? scores[pIndex][i] / multipliers[roundSuit] : 0}" min="0" ${isDisabledInput ? 'disabled' : ''}>
-                                    </div>
-                                </div>
-                                <p id="score-display-${pIndex}-${i}" class="mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>
-                            </div>
-                        </td>`;
-                    });
-                    bodyHtml += '</tr>';
-                }
-                scoreTableBody.innerHTML = bodyHtml;
-                
-                updateTotals();
-            };
-            
-            // Functie om het team van een speler te bepalen (0-1 is team 0, 2-3 is team 1)
-            const getTeam = (pIndex) => {
-                return pIndex < 2 ? 0 : 1;
-            };
-
-            // Update total scores in the table footer
-            const updateTotals = () => {
-                let footerHtml = '';
-                
-                let totalScoresHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
-                let totalScores = players.map((_, index) => {
-                    return scores[index].reduce((acc, current) => acc + (current || 0), 0);
-                });
-                
-                totalScores.forEach((total, tIndex) => {
-                    const roundedClass = tIndex === totalScores.length - 1 ? 'rounded-br-2xl' : '';
-                    const teamClass = isTeamMode && tIndex >= 2 ? 'team-b-header' : 'team-a-header';
-                    totalScoresHtml += `<td class="text-lg font-bold bg-gray-200 text-center ${teamClass} text-white">${total}</td>`;
-                });
-                totalScoresHtml += '</tr>';
-                footerHtml += totalScoresHtml;
-
-                if (isTeamMode) {
-                    const totalTeamA = totalScores[0] + totalScores[1];
-                    const totalTeamB = totalScores[2] + totalScores[3];
-                    
-                    let teamTotalsHtml = `<tr>
-                        <td class="font-bold text-sm">Team Totalen</td>
-                        <td colspan="2" class="text-lg font-bold text-center team-a-total-cell">${totalTeamA}</td>
-                        <td colspan="2" class="text-lg font-bold text-center team-b-total-cell rounded-br-2xl">${totalTeamB}</td>
-                    </tr>`;
-                    footerHtml += teamTotalsHtml;
-                }
-
-                scoreTableFoot.innerHTML = footerHtml;
-            };
-
-            const getKistergeScore = (cardValue) => {
-                switch (cardValue) {
-                    case 'A': return -10;
-                    case '10':
-                    case 'B':
-                    case 'V':
-                    case 'H': return -100;
-                    default: return -10 * parseInt(cardValue, 10);
-                }
-            };
-
-            window.handleRoundSettingsChange = (rIndex) => {
-                if (!roundSettings[rIndex]) return;
-                const suitSelect = document.getElementById(`suit-${rIndex}`);
-                const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
-                const kistergeCardSelect = document.getElementById(`kisterge-card-${rIndex}`);
-                
-                if (suitSelect) roundSettings[rIndex].suit = suitSelect.value;
-                if (kistergePlayerSelect) roundSettings[rIndex].kistergePlayer = parseInt(kistergePlayerSelect.value, 10);
-                if (kistergeCardSelect) roundSettings[rIndex].kistergeCard = kistergeCardSelect.value;
-                
-                renderScoreTable();
-                window.recalculateRoundScores(rIndex);
-            };
-
-            const updateRoundUiState = (rIndex) => {
-                if (!roundSettings[rIndex]) return;
-                const isRoundConfigured = roundSettings[rIndex].kistergeCard !== '-1' && roundSettings[rIndex].suit !== 'geen';
-                const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
-                const roundSettingsDiv = document.getElementById(`round-settings-${rIndex}`);
-                
-                if (roundSettingsDiv) roundSettingsDiv.classList.toggle('highlight-attention', !isRoundConfigured);
-                
-                if (kistergePlayerSelect) {
-                    kistergePlayerSelect.disabled = !isRoundConfigured;
-                }
-
-                players.forEach((_, pIndex) => {
-                    const outBtn = document.getElementById(`out-btn-${pIndex}-${rIndex}`);
-                    const leftoverInput = document.getElementById(`leftover-${pIndex}-${rIndex}`);
-                    const outDetailsDiv = document.getElementById(`out-details-${pIndex}-${rIndex}`);
-                    const leftoverDetailsDiv = document.getElementById(`leftover-details-${pIndex}-${rIndex}`);
-
-                    const isOutPlayer = roundSettings[rIndex].outPlayer === pIndex;
-                    const outPlayerIndex = roundSettings[rIndex].outPlayer;
-                    
-                    const isDisabledButton = !isRoundConfigured;
-                    const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex) && !isOutPlayer;
-                    const isDisabledInput = !isRoundConfigured || isOutPlayer || isTeammateOfWinner;
-
-                    if (outBtn) {
-                        outBtn.disabled = isDisabledButton;
-                        outBtn.classList.toggle('opacity-50', isDisabledButton);
-                        outBtn.classList.toggle('cursor-not-allowed', isDisabledButton);
-                    }
-                    if (leftoverInput) {
-                        leftoverInput.disabled = isDisabledInput;
-                    }
-
-                    if (outDetailsDiv && leftoverDetailsDiv) {
-                         outDetailsDiv.classList.toggle('hidden', !isOutPlayer);
-                         leftoverDetailsDiv.classList.toggle('hidden', isDisabledInput);
-                    }
-                });
-            };
-
-            window.toggleOutStatus = (rIndex, pIndex) => {
-                if (!roundSettings[rIndex]) return;
-                const currentOutPlayer = roundSettings[rIndex].outPlayer;
-                if (currentOutPlayer === pIndex) {
-                    roundSettings[rIndex].outPlayer = null;
-                } else {
-                    roundSettings[rIndex].outPlayer = pIndex;
-                }
-                renderScoreTable();
-                window.recalculateRoundScores(rIndex);
-            };
-
-            window.setOutType = (rIndex, type) => {
-                if (!roundSettings[rIndex]) return;
-                roundSettings[rIndex].outType = type;
-                
-                const standaardBtn = document.getElementById(`standaard-btn-${rIndex}`);
-                const jokerBtn = document.getElementById(`joker-btn-${rIndex}`);
-                if (standaardBtn) {
-                    standaardBtn.classList.toggle('bg-blue-600', type === 'standaard');
-                    standaardBtn.classList.toggle('text-white', type === 'standaard');
-                    standaardBtn.classList.toggle('bg-gray-200', type !== 'standaard');
-                    standaardBtn.classList.toggle('text-gray-700', type !== 'standaard');
-                }
-                
-                if (jokerBtn) {
-                    jokerBtn.classList.toggle('bg-blue-600', type === 'joker');
-                    jokerBtn.classList.toggle('text-white', type === 'joker');
-                    jokerBtn.classList.toggle('bg-gray-200', type !== 'joker');
-                    jokerBtn.classList.toggle('text-gray-700', type !== 'joker');
-                }
-
-                window.recalculateRoundScores(rIndex);
-            };
-
-            window.recalculateRoundScores = (rIndex) => {
-                if (!roundSettings[rIndex] || !players.length) return;
-                const roundSuit = roundSettings[rIndex].suit;
-                const outPlayerIndex = roundSettings[rIndex].outPlayer;
-                const outType = roundSettings[rIndex].outType;
-                const kistergePlayerIndex = roundSettings[rIndex].kistergePlayer;
-                const kistergeCardValue = roundSettings[rIndex].kistergeCard;
-
-                players.forEach((player, pIndex) => {
-                    let score = 0;
-                    
-                    const isOutPlayer = pIndex === outPlayerIndex;
-                    const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex);
-
-                    if (isOutPlayer) {
-                        score = outType === 'joker' ? -500 : -100;
-                    } else if (isTeammateOfWinner) {
-                        score = 0;
-                    } else {
-                        const leftoverCardsInput = document.getElementById(`leftover-${pIndex}-${rIndex}`);
-                        const leftoverCards = leftoverCardsInput ? parseInt(leftoverCardsInput.value, 10) : 0;
-                        
-                        if (!isNaN(leftoverCards) && leftoverCards > 0 && multipliers[roundSuit]) {
-                            score = leftoverCards * multipliers[roundSuit];
-                        }
-                    }
-
-                    if (pIndex === kistergePlayerIndex && kistergePlayerIndex !== -1) {
-                        score += getKistergeScore(kistergeCardValue);
-                    }
-                    
-                    if (scores[pIndex]) {
-                         scores[pIndex][rIndex] = score;
-                    }
-                });
-                
-                updateScoreDisplays(rIndex);
-            };
-            
-            const updateScoreDisplays = (rIndex) => {
-                players.forEach((player, pIndex) => {
-                    const scoreDisplay = document.getElementById(`score-display-${pIndex}-${rIndex}`);
-                    const score = scores[pIndex] && scores[pIndex][rIndex] !== undefined ? scores[pIndex][rIndex] : 0;
-                    if (scoreDisplay) {
-                        scoreDisplay.textContent = score;
-                        scoreDisplay.classList.toggle('bg-green-100', score < 0);
-                        scoreDisplay.classList.toggle('text-green-700', score < 0);
-                        scoreDisplay.classList.toggle('bg-red-100', score >= 0);
-                        scoreDisplay.classList.toggle('text-red-700', score >= 0);
-                    }
-                });
-                updateTotals();
-            };
-            
-            // Initial call to hide/show team mode option on page load
-            updateTeamModeOption();
+      // Functie om een ronde toe te voegen
+      addRoundBtn.addEventListener('click', () => {
+        numRounds++;
+        playerScores.forEach(scores => scores.push(0));
+        roundData.push({
+          suit: 'geen',
+          kistergeCard: '-1',
+          outPlayer: null,
+          outType: 'standaard',
+          kistergePlayer: -1
         });
-    </script>
+        renderTable();
+      });
+
+      // Functie om het spel te resetten
+      resetGameBtn.addEventListener('click', () => {
+        playerNames = [];
+        playerScores = [];
+        roundData = [];
+        numRounds = 0;
+        isTeamMode = false;
+
+        playerNameInputs.forEach(input => input.value = '');
+        teamModeCheckbox.checked = false;
+        teamModeContainer.classList.add('hidden');
+        scoreContainer.classList.add('hidden');
+        startGameBtn.classList.remove('hidden');
+        updateGameBtn.classList.add('hidden');
+        resetGameBtn.classList.add('hidden');
+        startGameBtn.classList.remove('sm:w-1/2');
+        startGameBtn.classList.add('w-full');
+        scoreTableHead.innerHTML = '';
+        scoreTableBody.innerHTML = '';
+        scoreTableFoot.innerHTML = '';
+      });
+
+      // Functie om de scoretabel te renderen
+      const renderTable = () => {
+        // Render de tabelkop
+        let tableHeadHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
+        playerNames.forEach((name, playerIndex) => {
+          const isLastPlayer = playerIndex === playerNames.length - 1;
+          const cornerClass = isLastPlayer ? 'rounded-tr-2xl' : '';
+          const teamHeaderClass = isTeamMode && playerIndex >= 2 ? 'team-b-header' : 'team-a-header';
+          tableHeadHtml += `<th class="text-white text-sm ${cornerClass} ${teamHeaderClass}">${name}</th>`;
+        });
+        tableHeadHtml += '</tr>';
+        scoreTableHead.innerHTML = tableHeadHtml;
+
+        // Render de tabelrijen voor elke ronde
+        let tableBodyHtml = '';
+        for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
+          if (!roundData[roundIndex]) {
+             roundData[roundIndex] = {
+               suit: 'geen',
+               kistergeCard: '-1',
+               outPlayer: null,
+               outType: 'standaard',
+               kistergePlayer: -1
+             };
+          }
+
+          const currentRound = roundData[roundIndex];
+          const isOutPlayerSet = currentRound.kistergeCard !== '-1' && currentRound.suit !== 'geen';
+          const turnedCardSuit = currentRound.suit;
+          const turnedCardKisterge = currentRound.kistergeCard;
+          const kistergePlayer = currentRound.kistergePlayer;
+
+          let cardDisplayHtml = '';
+          if (isOutPlayerSet) {
+            const cardInfo = suitDetails[turnedCardSuit];
+            const cardValue = kistergeCardPoints.find(card => card.value === turnedCardKisterge).value;
+            cardDisplayHtml = `<div class="card-display"><span class="card-value ${cardInfo.color}">${cardValue}</span><span class="card-suit ${cardInfo.color}">${cardInfo.emoji}</span></div>`;
+          }
+
+          tableBodyHtml += `<tr><td class="font-bold text-sm">Ronde ${roundIndex + 1}${cardDisplayHtml}`;
+          
+          // Ronde-instellingen
+          const highlightClass = isOutPlayerSet ? '' : 'highlight-attention';
+          tableBodyHtml += `<div id="round-settings-${roundIndex}" class="mt-1 space-y-1 text-xs ${highlightClass}">`;
+          tableBodyHtml += `<div><label class="block font-medium text-gray-700">Gedraaide kaart:</label>`;
+          tableBodyHtml += `<select id="suit-${roundIndex}" onchange="window.handleRoundSettingsChange(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">`;
+          tableBodyHtml += `<option value="geen" ${'geen' === currentRound.suit ? 'selected' : ''}>♣️♠️♦️♥️</option>`;
+          tableBodyHtml += `<option value="klaver" ${'klaver' === currentRound.suit ? 'selected' : ''}>♣️ (x2)</option>`;
+          tableBodyHtml += `<option value="schoppen" ${'schoppen' === currentRound.suit ? 'selected' : ''}>♠️ (x3)</option>`;
+          tableBodyHtml += `<option value="ruiten" ${'ruiten' === currentRound.suit ? 'selected' : ''}>♦️ (x4)</option>`;
+          tableBodyHtml += `<option value="harten" ${'harten' === currentRound.suit ? 'selected' : ''}>♥️ (x5)</option>`;
+          tableBodyHtml += `</select>`;
+          tableBodyHtml += `<select id="kisterge-card-${roundIndex}" onchange="window.handleRoundSettingsChange(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">`;
+          tableBodyHtml += `<option value="-1">Geen</option>`;
+          tableBodyHtml += kistergeCardPoints.map(card => `<option value="${card.value}" ${currentRound.kistergeCard === card.value ? 'selected' : ''}>${card.text}</option>`).join('');
+          tableBodyHtml += `</select></div>`;
+          tableBodyHtml += `<div><label class="block font-medium text-gray-700">Speler met "Kisterge":</label>`;
+          tableBodyHtml += `<select id="kisterge-player-${roundIndex}" onchange="window.handleRoundSettingsChange(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" ${isOutPlayerSet ? '' : 'disabled'}>`;
+          tableBodyHtml += `<option value="-1">Geen</option>`;
+          tableBodyHtml += playerNames.map((name, index) => `<option value="${index}" ${parseInt(kistergePlayer) === index ? 'selected' : ''}>${name}</option>`).join('');
+          tableBodyHtml += `</select></div></div></td>`;
+
+          // Score-inputs voor elke speler
+          playerNames.forEach((playerName, playerIndex) => {
+            const score = playerScores[playerIndex] && playerScores[playerIndex][roundIndex] !== undefined ? playerScores[playerIndex][roundIndex] : 0;
+            const isOutPlayer = currentRound.outPlayer === playerIndex;
+            const isOutPlayerSetInRound = currentRound.outPlayer !== null;
+            const outType = currentRound.outType;
+            
+            const standardBtnClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+            const jokerBtnClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+
+            const isPlayerOnOutTeam = isTeamMode && currentRound.outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(currentRound.outPlayer);
+            const buttonSymbol = isOutPlayer || isPlayerOnOutTeam ? '🏆' : (currentRound.outPlayer !== null ? '❌' : '🏆');
+            const buttonClass = isOutPlayer || isPlayerOnOutTeam ? 'bg-green-500' : (currentRound.outPlayer !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
+            const isLeftoverInputDisabled = !isOutPlayerSet || isOutPlayer || isPlayerOnOutTeam;
+            const winningTeamCellClass = isPlayerOnOutTeam ? 'winning-team-cell' : '';
+
+            tableBodyHtml += `<td class="${winningTeamCellClass}">`;
+            tableBodyHtml += `<div class="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">`;
+            tableBodyHtml += `<button id="out-btn-${playerIndex}-${roundIndex}" onclick="window.toggleOutStatus(${roundIndex}, ${playerIndex})" class="w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2 ${buttonClass} ${!isOutPlayerSet ? 'opacity-50 cursor-not-allowed' : ''}" ${!isOutPlayerSet ? 'disabled' : ''} tabindex="-1">${buttonSymbol}</button>`;
+            
+            // Out-details
+            const outDetailsHiddenClass = isOutPlayer ? '' : 'hidden';
+            tableBodyHtml += `<div id="out-details-${playerIndex}-${roundIndex}" class="out-details mt-1 space-y-1 flex justify-center ${outDetailsHiddenClass}">`;
+            tableBodyHtml += `<button id="standaard-btn-${roundIndex}" onclick="window.setOutType(${roundIndex}, 'standaard')" class="px-1 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standardBtnClass}" ${!isOutPlayerSet ? 'disabled' : ''}>Standaard</button>`;
+            tableBodyHtml += `<button id="joker-btn-${roundIndex}" onclick="window.setOutType(${roundIndex}, 'joker')" class="px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerBtnClass}" ${!isOutPlayerSet ? 'disabled' : ''}>Joker</button>`;
+            tableBodyHtml += `</div>`;
+
+            // Restkaarten-input
+            const leftoverDetailsHiddenClass = isLeftoverInputDisabled ? 'hidden' : '';
+            tableBodyHtml += `<div id="leftover-details-${playerIndex}-${roundIndex}" class="leftover-details mt-1 space-y-1 ${leftoverDetailsHiddenClass}">`;
+            tableBodyHtml += `<label class="block text-xs font-medium text-gray-700">Restkaarten:</label>`;
+            tableBodyHtml += `<input type="number" id="leftover-${playerIndex}-${roundIndex}" oninput="window.recalculateRoundScores(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${score > 0 && suitMultipliers[playerIndex] ? score / suitMultipliers[playerIndex] : 0}" min="0" ${isLeftoverInputDisabled ? 'disabled' : ''}>`;
+            tableBodyHtml += `</div>`;
+
+            // Score-display
+            tableBodyHtml += `<p id="score-display-${playerIndex}-${roundIndex}" class="mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>`;
+            tableBodyHtml += `</div></td>`;
+          });
+          tableBodyHtml += '</tr>';
+        }
+        scoreTableBody.innerHTML = tableBodyHtml;
+        renderTotalScores();
+      };
+      
+      // Functie om het teamnummer van een speler te bepalen
+      const getPlayerTeamIndex = playerIndex => playerIndex < 2 ? 0 : 1;
+
+      // Functie om de totale scores te renderen
+      const renderTotalScores = () => {
+        let footerHtml = '';
+        
+        // Render de totale score rij voor elke speler
+        let totalScoreRowHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
+        let playerTotals = playerNames.map((_, playerIndex) => playerScores[playerIndex].reduce((sum, score) => sum + (score || 0), 0));
+        playerTotals.forEach((total, playerIndex) => {
+          const cornerClass = playerIndex === playerTotals.length - 1 ? 'rounded-br-2xl' : '';
+          const teamHeaderClass = isTeamMode && playerIndex >= 2 ? 'team-b-header' : 'team-a-header';
+          totalScoreRowHtml += `<td class="text-lg font-bold bg-gray-200 text-center ${teamHeaderClass} text-white">${total}</td>`;
+        });
+        totalScoreRowHtml += '</tr>';
+        footerHtml += totalScoreRowHtml;
+
+        // Render de totale scores van de teams indien teammodus ingeschakeld is
+        if (isTeamMode) {
+          const teamATotal = playerTotals[0] + playerTotals[1];
+          const teamBTotal = playerTotals[2] + playerTotals[3];
+          let teamTotalRowHtml = `<tr><td class="font-bold text-sm">Team Totalen</td>`;
+          teamTotalRowHtml += `<td colspan="2" class="text-lg font-bold text-center team-a-total-cell">${teamATotal}</td>`;
+          teamTotalRowHtml += `<td colspan="2" class="text-lg font-bold text-center team-b-total-cell rounded-br-2xl">${teamBTotal}</td></tr>`;
+          footerHtml += teamTotalRowHtml;
+        }
+
+        scoreTableFoot.innerHTML = footerHtml;
+      };
+      
+      // Functie om de score van de kisterge-kaart te bepalen
+      const getKistergeCardPoints = cardValue => {
+        switch (cardValue) {
+          case 'A':
+            return -10;
+          case '10':
+          case 'B':
+          case 'V':
+          case 'H':
+            return -100;
+          default:
+            return -10 * parseInt(cardValue, 10);
+        }
+      };
+
+      // Exposeer functies aan het window-object zodat ze vanuit onclick kunnen worden aangeroepen
+      window.handleRoundSettingsChange = roundIndex => {
+        if (!roundData[roundIndex]) return;
+
+        const suitSelect = document.getElementById(`suit-${roundIndex}`);
+        const kistergePlayerSelect = document.getElementById(`kisterge-player-${roundIndex}`);
+        const kistergeCardSelect = document.getElementById(`kisterge-card-${roundIndex}`);
+        
+        if (suitSelect) roundData[roundIndex].suit = suitSelect.value;
+        if (kistergePlayerSelect) roundData[roundIndex].kistergePlayer = parseInt(kistergePlayerSelect.value, 10);
+        if (kistergeCardSelect) roundData[roundIndex].kistergeCard = kistergeCardSelect.value;
+
+        renderTable();
+        window.recalculateRoundScores(roundIndex);
+      };
+
+      const updateRoundUI = roundIndex => {
+        if (!roundData[roundIndex]) return;
+
+        const isOutPlayerSet = roundData[roundIndex].kistergeCard !== '-1' && roundData[roundIndex].suit !== 'geen';
+        const kistergePlayerSelect = document.getElementById(`kisterge-player-${roundIndex}`);
+        const roundSettingsDiv = document.getElementById(`round-settings-${roundIndex}`);
+        
+        if (roundSettingsDiv) roundSettingsDiv.classList.toggle('highlight-attention', !isOutPlayerSet);
+        if (kistergePlayerSelect) kistergePlayerSelect.disabled = !isOutPlayerSet;
+
+        playerNames.forEach((_, playerIndex) => {
+          const outButton = document.getElementById(`out-btn-${playerIndex}-${roundIndex}`);
+          const leftoverInput = document.getElementById(`leftover-${playerIndex}-${roundIndex}`);
+          const outDetailsDiv = document.getElementById(`out-details-${playerIndex}-${roundIndex}`);
+          const leftoverDetailsDiv = document.getElementById(`leftover-details-${playerIndex}-${roundIndex}`);
+          
+          const isCurrentOutPlayer = roundData[roundIndex].outPlayer === playerIndex;
+          const isOutPlayerSetInRound = roundData[roundIndex].outPlayer !== null;
+          const isPlayerOnOutTeamAndNotOut = isTeamMode && isOutPlayerSetInRound && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(roundData[roundIndex].outPlayer) && !isCurrentOutPlayer;
+          const isLeftoverInputHidden = !isOutPlayerSet || isCurrentOutPlayer || isPlayerOnOutTeamAndNotOut;
+          
+          if (outButton) {
+            outButton.disabled = !isOutPlayerSet;
+            outButton.classList.toggle('opacity-50', !isOutPlayerSet);
+            outButton.classList.toggle('cursor-not-allowed', !isOutPlayerSet);
+          }
+          if (leftoverInput) leftoverInput.disabled = isLeftoverInputHidden;
+          if (outDetailsDiv && leftoverDetailsDiv) {
+            outDetailsDiv.classList.toggle('hidden', !isCurrentOutPlayer);
+            leftoverDetailsDiv.classList.toggle('hidden', isLeftoverInputHidden);
+          }
+        });
+      };
+      
+      window.toggleOutStatus = (roundIndex, playerIndex) => {
+        if (!roundData[roundIndex]) return;
+
+        const currentOutPlayer = roundData[roundIndex].outPlayer;
+        roundData[roundIndex].outPlayer = currentOutPlayer === playerIndex ? null : playerIndex;
+        
+        renderTable();
+        window.recalculateRoundScores(roundIndex);
+      };
+
+      window.setOutType = (roundIndex, type) => {
+        if (!roundData[roundIndex]) return;
+
+        roundData[roundIndex].outType = type;
+        const standaardBtn = document.getElementById(`standaard-btn-${roundIndex}`);
+        const jokerBtn = document.getElementById(`joker-btn-${roundIndex}`);
+        
+        if (standaardBtn) {
+          standaardBtn.classList.toggle('bg-blue-600', type === 'standaard');
+          standaardBtn.classList.toggle('text-white', type === 'standaard');
+          standaardBtn.classList.toggle('bg-gray-200', type !== 'standaard');
+          standaardBtn.classList.toggle('text-gray-700', type !== 'standaard');
+        }
+        if (jokerBtn) {
+          jokerBtn.classList.toggle('bg-blue-600', type === 'joker');
+          jokerBtn.classList.toggle('text-white', type === 'joker');
+          jokerBtn.classList.toggle('bg-gray-200', type !== 'joker');
+          jokerBtn.classList.toggle('text-gray-700', type !== 'joker');
+        }
+
+        window.recalculateRoundScores(roundIndex);
+      };
+
+      window.recalculateRoundScores = roundIndex => {
+        if (!roundData[roundIndex] || !playerNames.length) return;
+
+        const { suit, outPlayer, outType, kistergePlayer, kistergeCard } = roundData[roundIndex];
+        
+        playerNames.forEach((_, playerIndex) => {
+          let score = 0;
+          const isCurrentOutPlayer = playerIndex === outPlayer;
+          const isPlayerOnOutTeam = isTeamMode && outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(outPlayer);
+          
+          if (isCurrentOutPlayer) {
+            score = outType === 'joker' ? -500 : -100;
+          } else if (isPlayerOnOutTeam) {
+            score = 0;
+          } else {
+            const leftoverInput = document.getElementById(`leftover-${playerIndex}-${roundIndex}`);
+            const leftoverCards = leftoverInput ? parseInt(leftoverInput.value, 10) : 0;
+            if (!isNaN(leftoverCards) && leftoverCards > 0 && suitMultipliers[suit]) {
+              score = leftoverCards * suitMultipliers[suit];
+            }
+          }
+          
+          if (playerIndex === kistergePlayer && kistergePlayer !== -1) {
+            score += getKistergeCardPoints(kistergeCard);
+          }
+          
+          playerScores[playerIndex][roundIndex] = score;
+        });
+
+        updateRoundScoreDisplay(roundIndex);
+      };
+
+      const updateRoundScoreDisplay = roundIndex => {
+        playerNames.forEach((_, playerIndex) => {
+          const scoreDisplay = document.getElementById(`score-display-${playerIndex}-${roundIndex}`);
+          const score = playerScores[playerIndex] && playerScores[playerIndex][roundIndex] !== undefined ? playerScores[playerIndex][roundIndex] : 0;
+          
+          if (scoreDisplay) {
+            scoreDisplay.textContent = score;
+            scoreDisplay.classList.toggle('bg-green-100', score < 0);
+            scoreDisplay.classList.toggle('text-green-700', score < 0);
+            scoreDisplay.classList.toggle('bg-red-100', score >= 0);
+            scoreDisplay.classList.toggle('text-red-700', score >= 0);
+          }
+        });
+        renderTotalScores();
+      };
+      
+      // Roep de functie aan om de UI bij te werken bij het laden van de pagina
+      updateTeamModeUI();
+    });
+  </script>
 </body>
 </html>
