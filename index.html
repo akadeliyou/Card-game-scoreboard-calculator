@@ -222,7 +222,6 @@
       // Haal alle benodigde DOM-elementen op
       const startGameBtn = document.getElementById('start-game-btn');
       const updateGameBtn = document.getElementById('update-game-btn');
-      // Verwijderde: const numRoundsInput = document.getElementById('num-rounds');
       const scoreContainer = document.getElementById('score-container');
       const scoreTableHead = document.querySelector('#score-table thead');
       const scoreTableBody = document.querySelector('#score-table tbody');
@@ -475,7 +474,7 @@
             const leftoverDetailsHiddenClass = isLeftoverInputDisabled ? 'hidden' : '';
             tableBodyHtml += `<div id="leftover-details-${playerIndex}-${roundIndex}" class="leftover-details mt-1 space-y-1 ${leftoverDetailsHiddenClass}">`;
             tableBodyHtml += `<label class="block text-xs font-medium text-gray-700">Restkaarten:</label>`;
-            tableBodyHtml += `<input type="number" id="leftover-${playerIndex}-${roundIndex}" oninput="window.recalculateRoundScores(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${score > 0 && suitMultipliers[playerIndex] ? score / suitMultipliers[playerIndex] : 0}" min="0" ${isLeftoverInputDisabled ? 'disabled' : ''}>`;
+            tableBodyHtml += `<input type="number" id="leftover-${playerIndex}-${roundIndex}" oninput="window.recalculateRoundScores(${roundIndex})" onfocus="this.select()" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${score > 0 && suitMultipliers[playerIndex] ? score / suitMultipliers[playerIndex] : 0}" min="0" ${isLeftoverInputDisabled ? 'disabled' : ''}>`;
             tableBodyHtml += `</div>`;
 
             // Score-display
