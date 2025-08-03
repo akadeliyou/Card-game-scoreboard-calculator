@@ -31,10 +31,8 @@
             }
             #rotation-message {
                 display: none;
-        
-                
-            }
         }
+    }
 
         /* Extra styling for the table */
         table {
@@ -42,11 +40,13 @@
             border-spacing: 0;
             table-layout: fixed; /* Zorgt ervoor dat kolommen gelijke breedtes hebben */
             width: 100%; /* Zorgt ervoor dat de tabel de volledige breedte van de container inneemt */
+            max-width: 900px; /* Maakt de tabel smaller */
         }
         th, td {
             border: 1px solid #e5e7eb;
             padding: 0.5rem; /* Minder padding voor kleine schermen */
             vertical-align: top;
+            position: relative; /* Voor de absolute positionering van de kaart */
         }
         th {
             background-color: #1f2937;
@@ -78,6 +78,56 @@
             box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
             transition: all 0.3s ease-in-out;
             padding: 0.5rem;
+        }
+        /* Team colors */
+        .team-a-header {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .team-b-header {
+            background-color: #1d4ed8; /* blue-700 */
+        }
+        .team-a-total-cell {
+            background-color: #93c5fd; /* blue-300 */
+        }
+        .team-b-total-cell {
+            background-color: #60a5fa; /* blue-400 */
+        }
+        /* Card display styles */
+        .card-display {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 32px;
+            height: 43px;
+            background-color: #ffffff;
+            border: 1px solid #000;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            padding: 2px;
+            line-height: 1;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .card-value {
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .card-suit {
+            font-size: 16px;
+        }
+        .text-red {
+            color: #ef4444; /* red-500 */
+        }
+        .text-black {
+            color: #1f2937; /* gray-800 */
+        }
+        /* New class for the winning team's columns */
+        .winning-team-cell {
+            background-color: #d1fae5; /* green-100 */
         }
     </style>
 </head>
@@ -134,7 +184,12 @@
             <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">
                 Het spel kan niet worden gestart met 1 speler. Zoek vrienden!
             </div>
-            <button id="start-game-btn" class="mt-4 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
+            <!-- Dynamic buttons for starting, updating or resetting the game -->
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+                <button id="start-game-btn" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
+                <button id="update-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Instellingen toepassen</button>
+                <button id="reset-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Reset Spel</button>
+            </div>
         </div>
 
         <!-- Score table is dynamically inserted here -->
@@ -155,15 +210,18 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const startGameBtn = document.getElementById('start-game-btn');
+            const updateGameBtn = document.getElementById('update-game-btn');
             const numRoundsInput = document.getElementById('num-rounds');
             const scoreContainer = document.getElementById('score-container');
             const scoreTableHead = document.querySelector('#score-table thead');
             const scoreTableBody = document.querySelector('#score-table tbody');
             const scoreTableFoot = document.querySelector('#score-table tfoot');
             const addRoundBtn = document.getElementById('add-round-btn');
+            const resetGameBtn = document.getElementById('reset-game-btn');
             const playerCountErrorDiv = document.getElementById('player-count-error');
             const teamModeContainer = document.getElementById('team-mode-container');
             const teamModeCheckbox = document.getElementById('team-mode-checkbox');
+            const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
 
             let players = [];
             let scores = [];
@@ -179,7 +237,7 @@
             };
             
             const kistergeCardValues = [
-                { value: 'A', text: 'Aas (-10)' },
+                { value: 'A', text: 'A (-10)' },
                 { value: '2', text: '2 (-20)' },
                 { value: '3', text: '3 (-30)' },
                 { value: '4', text: '4 (-40)' },
@@ -189,14 +247,21 @@
                 { value: '8', text: '8 (-80)' },
                 { value: '9', text: '9 (-90)' },
                 { value: '10', text: '10 (-100)' },
-                { value: 'Boer', text: 'Boer (-100)' },
-                { value: 'Vrouw', text: 'Vrouw (-100)' },
-                { value: 'Heer', text: 'Heer (-100)' }
+                { value: 'B', text: 'Boer (-100)' },
+                { value: 'V', text: 'Vrouw (-100)' },
+                { value: 'H', text: 'Heer (-100)' }
             ];
+
+            const suitDetails = {
+                'klaver': { emoji: '♣️', color: 'text-black' },
+                'schoppen': { emoji: '♠️', color: 'text-black' },
+                'ruiten': { emoji: '♦️', color: 'text-red' },
+                'harten': { emoji: '♥️', color: 'text-red' }
+            };
 
             // Functie om de teammodus optie te tonen/verbergen
             const updateTeamModeOption = () => {
-                const filledNames = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`).value.trim());
+                const filledNames = playerNameInputs.map(input => input.value.trim());
                 const playerCount = filledNames.filter(name => name !== '').length;
                 if (playerCount === 4) {
                     teamModeContainer.classList.remove('hidden');
@@ -207,19 +272,13 @@
             };
             
             // Event listeners for player name inputs to update team mode option
-            for (let i = 1; i <= 4; i++) {
-                document.getElementById(`player-name-${i}`).addEventListener('input', updateTeamModeOption);
-            }
+            playerNameInputs.forEach(input => {
+                input.addEventListener('input', updateTeamModeOption);
+            });
 
-            // Functie om het spel te starten
+            // Functie om het spel voor de eerste keer te starten
             startGameBtn.addEventListener('click', () => {
-                const names = [];
-                for (let i = 1; i <= 4; i++) {
-                    const name = document.getElementById(`player-name-${i}`).value.trim();
-                    if (name !== '') {
-                        names.push(name);
-                    }
-                }
+                const names = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
                 
                 // Check if there are enough players
                 if (names.length < 2) {
@@ -227,19 +286,71 @@
                     return;
                 }
                 
-                // Hide the error message if there are enough players
                 playerCountErrorDiv.classList.add('hidden');
+                
+                // Show the score container and the update button
+                scoreContainer.classList.remove('hidden');
+                startGameBtn.classList.add('hidden');
+                updateGameBtn.classList.remove('hidden');
+                resetGameBtn.classList.remove('hidden'); // Show reset button
+
+                // Adjust the width of the update button
+                updateGameBtn.classList.remove('w-full');
+                updateGameBtn.classList.add('sm:w-1/2');
                 
                 players = names;
                 rounds = parseInt(numRoundsInput.value);
                 scores = players.map(() => Array(rounds).fill(0));
-                // New rounds start with a "geen" suit and a "-1" kisterge card
                 roundSettings = Array(rounds).fill(null).map(() => ({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 }));
-                
-                // Set team mode status
                 isTeamMode = players.length === 4 && teamModeCheckbox.checked;
 
-                scoreContainer.classList.remove('hidden');
+                renderScoreTable();
+
+                // Scroll automatically to the scoreboard
+                scoreContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // Functie om de spelinstellingen te updaten na de start
+            updateGameBtn.addEventListener('click', () => {
+                const newNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
+                
+                if (newNames.length < 2) {
+                    playerCountErrorDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                playerCountErrorDiv.classList.add('hidden');
+                
+                const newRounds = parseInt(numRoundsInput.value);
+                const oldPlayersCount = players.length;
+                const newPlayersCount = newNames.length;
+                
+                if (newPlayersCount !== oldPlayersCount) {
+                    const newScores = Array(newPlayersCount).fill(null).map((_, pIndex) => {
+                        const playerScores = scores[pIndex] || [];
+                        const paddedScores = playerScores.slice(0, newRounds).concat(Array(Math.max(0, newRounds - playerScores.length)).fill(0));
+                        return paddedScores;
+                    });
+                    scores = newScores;
+                }
+                
+                players = newNames;
+                
+                if (newRounds !== rounds) {
+                    if (newRounds > rounds) {
+                        const roundsToAdd = newRounds - rounds;
+                        for (let i = 0; i < roundsToAdd; i++) {
+                             scores.forEach(playerScores => playerScores.push(0));
+                             roundSettings.push({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 });
+                        }
+                    } else if (newRounds < rounds) {
+                        scores.forEach(playerScores => playerScores.length = newRounds);
+                        roundSettings.length = newRounds;
+                    }
+                    rounds = newRounds;
+                }
+
+                isTeamMode = players.length === 4 && teamModeCheckbox.checked;
                 renderScoreTable();
             });
 
@@ -247,34 +358,75 @@
             addRoundBtn.addEventListener('click', () => {
                 rounds++;
                 scores.forEach(playerScores => playerScores.push(0));
-                // New round also starts with "geen" suit and "-1" kisterge card
                 roundSettings.push({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 });
+                numRoundsInput.value = rounds; // Update the rounds input field
                 renderScoreTable();
+            });
+
+            // Functie om het hele spel te resetten
+            resetGameBtn.addEventListener('click', () => {
+                // Clear all game state
+                players = [];
+                scores = [];
+                roundSettings = [];
+                rounds = 0;
+                isTeamMode = false;
+
+                // Reset UI elements
+                playerNameInputs.forEach(input => input.value = '');
+                numRoundsInput.value = '1';
+                teamModeCheckbox.checked = false;
+                teamModeContainer.classList.add('hidden');
+
+                // Hide score table and show start button
+                scoreContainer.classList.add('hidden');
+                startGameBtn.classList.remove('hidden');
+                updateGameBtn.classList.add('hidden');
+                resetGameBtn.classList.add('hidden'); // Hide reset button
+                
+                // Adjust the width of the start button
+                startGameBtn.classList.remove('sm:w-1/2');
+                startGameBtn.classList.add('w-full');
+                
+                scoreTableHead.innerHTML = '';
+                scoreTableBody.innerHTML = '';
+                scoreTableFoot.innerHTML = '';
             });
 
             // Functie om de HTML-tabel te renderen
             const renderScoreTable = () => {
-                // Table header row
                 let headerHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
                 players.forEach((player, pIndex) => {
                     const isLastPlayer = pIndex === players.length - 1;
                     const roundedClass = isLastPlayer ? 'rounded-tr-2xl' : '';
-                    headerHtml += `<th class="text-white bg-blue-500 text-sm ${roundedClass}">${player}</th>`;
+                    const teamClass = isTeamMode && pIndex >= 2 ? 'team-b-header' : 'team-a-header';
+                    headerHtml += `<th class="text-white text-sm ${roundedClass} ${teamClass}">${player}</th>`;
                 });
                 headerHtml += '</tr>';
                 scoreTableHead.innerHTML = headerHtml;
 
-                // Rows for each round
                 let bodyHtml = '';
                 for (let i = 0; i < rounds; i++) {
+                    if (!roundSettings[i]) {
+                         roundSettings[i] = { suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 };
+                    }
                     const outPlayerIndex = roundSettings[i].outPlayer;
                     const kistergePlayerIndex = roundSettings[i].kistergePlayer;
-                    // A round is configured if both a suit AND a kisterge card have been selected
                     const isRoundConfigured = roundSettings[i].kistergeCard !== '-1' && roundSettings[i].suit !== 'geen';
+                    const roundSuit = roundSettings[i].suit;
+                    
+                    let cardDisplayHtml = '';
+                    if (isRoundConfigured) {
+                        const suitEmoji = suitDetails[roundSuit].emoji;
+                        const suitColorClass = suitDetails[roundSuit].color;
+                        const cardText = kistergeCardValues.find(c => c.value === roundSettings[i].kistergeCard).value;
+                        cardDisplayHtml = `<div class="card-display"><span class="card-value ${suitColorClass}">${cardText}</span><span class="card-suit ${suitColorClass}">${suitEmoji}</span></div>`;
+                    }
 
                     bodyHtml += `<tr>
                         <td class="font-bold text-sm">
                             Ronde ${i + 1}
+                            ${cardDisplayHtml}
                             <div id="round-settings-${i}" class="mt-1 space-y-1 text-xs ${isRoundConfigured ? '' : 'highlight-attention'}">
                                 <div>
                                     <label class="block font-medium text-gray-700">Gedraaide kaart:</label>
@@ -300,37 +452,41 @@
                             </div>
                         </td>`;
                     players.forEach((player, pIndex) => {
-                        const score = scores[pIndex][i];
+                        const score = scores[pIndex] && scores[pIndex][i] !== undefined ? scores[pIndex][i] : 0;
                         const isOutPlayer = roundSettings[i].outPlayer === pIndex;
-                        // The button is disabled only if the round is not configured. The icon now changes independently.
                         const isDisabledButton = !isRoundConfigured;
-                        const isDisabledInput = !isRoundConfigured || isOutPlayer || (isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex));
+                        const outPlayerIndex = roundSettings[i].outPlayer;
                         const outType = roundSettings[i].outType;
                         const standaardClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
                         const jokerClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                        
+                        // Check if the current player is on the winning team
+                        const isWinningTeam = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex);
+                        
+                        // Determine button icon and class based on winner status
+                        const buttonIcon = (isOutPlayer || isWinningTeam) ? '🏆' : (outPlayerIndex !== null ? '❌' : '🏆');
+                        const buttonClass = (isOutPlayer || isWinningTeam) ? 'bg-green-500' : (outPlayerIndex !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
+                        
+                        const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex) && !isOutPlayer;
+                        const isDisabledInput = !isRoundConfigured || isOutPlayer || isTeammateOfWinner;
 
-                        // New logic for the button icon: show a trophy if no winner is selected, otherwise show a cross if it's not the winner.
-                        const buttonIcon = isOutPlayer ? '🏆' : (outPlayerIndex !== null ? '❌' : '🏆');
-                        const buttonClass = isOutPlayer ? 'bg-green-500' : (outPlayerIndex !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
-
-
-                        bodyHtml += `<td>
+                        bodyHtml += `<td class="${isWinningTeam ? 'winning-team-cell' : ''}">
                             <div class="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">
                                 <button id="out-btn-${pIndex}-${i}" onclick="window.toggleOutStatus(${i}, ${pIndex})"
                                     class="w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2
                                     ${buttonClass}
                                     ${isDisabledButton ? 'opacity-50 cursor-not-allowed' : ''}"
-                                    ${isDisabledButton ? 'disabled' : ''}>
+                                    ${isDisabledButton ? 'disabled' : ''} tabindex="-1">
                                     ${buttonIcon}
                                 </button>
                                 <div id="out-details-${pIndex}-${i}" class="out-details mt-1 space-y-1 flex justify-center ${!isOutPlayer ? 'hidden' : ''}">
                                     <button id="standaard-btn-${i}" onclick="window.setOutType(${i}, 'standaard')" class="px-1 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standaardClass}" ${isDisabledButton ? 'disabled' : ''}>Standaard</button>
                                     <button id="joker-btn-${i}" onclick="window.setOutType(${i}, 'joker')" class="px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerClass}" ${isDisabledButton ? 'disabled' : ''}>Joker</button>
                                 </div>
-                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-1 space-y-1 ${isOutPlayer || (isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex)) ? 'hidden' : ''}">
+                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-1 space-y-1 ${isDisabledInput ? 'hidden' : ''}">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700">Restkaarten:</label>
-                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${getLeftoverCards(pIndex, i)}" min="0" ${isDisabledInput ? 'disabled' : ''}>
+                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${scores[pIndex][i] > 0 && multipliers[roundSuit] ? scores[pIndex][i] / multipliers[roundSuit] : 0}" min="0" ${isDisabledInput ? 'disabled' : ''}>
                                     </div>
                                 </div>
                                 <p id="score-display-${pIndex}-${i}" class="mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>
@@ -349,72 +505,71 @@
                 return pIndex < 2 ? 0 : 1;
             };
 
-            // Get the leftover cards value, defaults to 0
-            const getLeftoverCards = (pIndex, rIndex) => {
-                const input = document.getElementById(`leftover-${pIndex}-${rIndex}`);
-                return input ? parseInt(input.value, 10) : 0;
-            };
-
             // Update total scores in the table footer
             const updateTotals = () => {
-                let playerNamesHtml = '<tr><td class="font-bold text-sm"></td>';
-                players.forEach(player => {
-                    playerNamesHtml += `<td class="text-white bg-blue-500 text-sm">${player}</td>`;
-                });
-                playerNamesHtml += '</tr>';
-
-                let totalScoresHtml = '<tr><td class="font-bold rounded-bl-2xl">Totaal</td>';
+                let footerHtml = '';
+                
+                let totalScoresHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
                 let totalScores = players.map((_, index) => {
                     return scores[index].reduce((acc, current) => acc + (current || 0), 0);
                 });
+                
                 totalScores.forEach((total, tIndex) => {
-                    const isLastTotal = tIndex === totalScores.length - 1;
-                    const roundedClass = isLastTotal ? 'rounded-br-2xl' : '';
-                    totalScoresHtml += `<td class="text-lg font-bold bg-gray-200 text-center ${roundedClass}">${total}</td>`;
+                    const roundedClass = tIndex === totalScores.length - 1 ? 'rounded-br-2xl' : '';
+                    const teamClass = isTeamMode && tIndex >= 2 ? 'team-b-header' : 'team-a-header';
+                    totalScoresHtml += `<td class="text-lg font-bold bg-gray-200 text-center ${teamClass} text-white">${total}</td>`;
                 });
                 totalScoresHtml += '</tr>';
+                footerHtml += totalScoresHtml;
 
-                scoreTableFoot.innerHTML = playerNamesHtml + totalScoresHtml;
+                if (isTeamMode) {
+                    const totalTeamA = totalScores[0] + totalScores[1];
+                    const totalTeamB = totalScores[2] + totalScores[3];
+                    
+                    let teamTotalsHtml = `<tr>
+                        <td class="font-bold text-sm">Team Totalen</td>
+                        <td colspan="2" class="text-lg font-bold text-center team-a-total-cell">${totalTeamA}</td>
+                        <td colspan="2" class="text-lg font-bold text-center team-b-total-cell rounded-br-2xl">${totalTeamB}</td>
+                    </tr>`;
+                    footerHtml += teamTotalsHtml;
+                }
+
+                scoreTableFoot.innerHTML = footerHtml;
             };
 
-            // Calculate the score for the Kisterge card
             const getKistergeScore = (cardValue) => {
                 switch (cardValue) {
                     case 'A': return -10;
                     case '10':
-                    case 'Boer':
-                    case 'Vrouw':
-                    case 'Heer': return -100;
+                    case 'B':
+                    case 'V':
+                    case 'H': return -100;
                     default: return -10 * parseInt(cardValue, 10);
                 }
             };
 
-            // Handle changes in round settings (suit, kisterge player, kisterge card)
             window.handleRoundSettingsChange = (rIndex) => {
+                if (!roundSettings[rIndex]) return;
                 const suitSelect = document.getElementById(`suit-${rIndex}`);
                 const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
                 const kistergeCardSelect = document.getElementById(`kisterge-card-${rIndex}`);
                 
-                roundSettings[rIndex].suit = suitSelect.value;
-                roundSettings[rIndex].kistergePlayer = parseInt(kistergePlayerSelect.value, 10);
-                roundSettings[rIndex].kistergeCard = kistergeCardSelect.value;
+                if (suitSelect) roundSettings[rIndex].suit = suitSelect.value;
+                if (kistergePlayerSelect) roundSettings[rIndex].kistergePlayer = parseInt(kistergePlayerSelect.value, 10);
+                if (kistergeCardSelect) roundSettings[rIndex].kistergeCard = kistergeCardSelect.value;
                 
-                // Call a function to enable/disable player inputs based on the card selection
-                updateRoundUiState(rIndex);
+                renderScoreTable();
                 window.recalculateRoundScores(rIndex);
             };
 
-            // New function to handle enabling/disabling the UI for a round
             const updateRoundUiState = (rIndex) => {
-                // A round is configured only when a suit and a kisterge card are selected.
+                if (!roundSettings[rIndex]) return;
                 const isRoundConfigured = roundSettings[rIndex].kistergeCard !== '-1' && roundSettings[rIndex].suit !== 'geen';
                 const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
                 const roundSettingsDiv = document.getElementById(`round-settings-${rIndex}`);
                 
-                // Add or remove the highlight class based on configuration
-                roundSettingsDiv.classList.toggle('highlight-attention', !isRoundConfigured);
+                if (roundSettingsDiv) roundSettingsDiv.classList.toggle('highlight-attention', !isRoundConfigured);
                 
-                // Enable/disable the Kisterge player select
                 if (kistergePlayerSelect) {
                     kistergePlayerSelect.disabled = !isRoundConfigured;
                 }
@@ -428,9 +583,9 @@
                     const isOutPlayer = roundSettings[rIndex].outPlayer === pIndex;
                     const outPlayerIndex = roundSettings[rIndex].outPlayer;
                     
-                    // The button is disabled only if the round is not configured.
                     const isDisabledButton = !isRoundConfigured;
-                    const isDisabledInput = !isRoundConfigured || isOutPlayer || (isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex));
+                    const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex) && !isOutPlayer;
+                    const isDisabledInput = !isRoundConfigured || isOutPlayer || isTeammateOfWinner;
 
                     if (outBtn) {
                         outBtn.disabled = isDisabledButton;
@@ -441,17 +596,15 @@
                         leftoverInput.disabled = isDisabledInput;
                     }
 
-                    // Show/hide the out details and leftover details
                     if (outDetailsDiv && leftoverDetailsDiv) {
-                         const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex) && !isOutPlayer;
                          outDetailsDiv.classList.toggle('hidden', !isOutPlayer);
-                         leftoverDetailsDiv.classList.toggle('hidden', isOutPlayer || isTeammateOfWinner);
+                         leftoverDetailsDiv.classList.toggle('hidden', isDisabledInput);
                     }
                 });
             };
 
-            // Toggle the 'out' status for a player in a round
             window.toggleOutStatus = (rIndex, pIndex) => {
+                if (!roundSettings[rIndex]) return;
                 const currentOutPlayer = roundSettings[rIndex].outPlayer;
                 if (currentOutPlayer === pIndex) {
                     roundSettings[rIndex].outPlayer = null;
@@ -462,28 +615,31 @@
                 window.recalculateRoundScores(rIndex);
             };
 
-            // Handle setting the out type with buttons
             window.setOutType = (rIndex, type) => {
+                if (!roundSettings[rIndex]) return;
                 roundSettings[rIndex].outType = type;
                 
-                // update button styles
                 const standaardBtn = document.getElementById(`standaard-btn-${rIndex}`);
                 const jokerBtn = document.getElementById(`joker-btn-${rIndex}`);
-                if (standaardBtn) standaardBtn.classList.toggle('bg-blue-600', type === 'standaard');
-                if (standaardBtn) standaardBtn.classList.toggle('text-white', type === 'standaard');
-                if (standaardBtn) standaardBtn.classList.toggle('bg-gray-200', type !== 'standaard');
-                if (standaardBtn) standaardBtn.classList.toggle('text-gray-700', type !== 'standaard');
+                if (standaardBtn) {
+                    standaardBtn.classList.toggle('bg-blue-600', type === 'standaard');
+                    standaardBtn.classList.toggle('text-white', type === 'standaard');
+                    standaardBtn.classList.toggle('bg-gray-200', type !== 'standaard');
+                    standaardBtn.classList.toggle('text-gray-700', type !== 'standaard');
+                }
                 
-                if (jokerBtn) jokerBtn.classList.toggle('bg-blue-600', type === 'joker');
-                if (jokerBtn) jokerBtn.classList.toggle('text-white', type === 'joker');
-                if (jokerBtn) jokerBtn.classList.toggle('bg-gray-200', type !== 'joker');
-                if (jokerBtn) jokerBtn.classList.toggle('text-gray-700', type !== 'joker');
+                if (jokerBtn) {
+                    jokerBtn.classList.toggle('bg-blue-600', type === 'joker');
+                    jokerBtn.classList.toggle('text-white', type === 'joker');
+                    jokerBtn.classList.toggle('bg-gray-200', type !== 'joker');
+                    jokerBtn.classList.toggle('text-gray-700', type !== 'joker');
+                }
 
                 window.recalculateRoundScores(rIndex);
             };
 
-            // Recalculate all scores for a given round
             window.recalculateRoundScores = (rIndex) => {
+                if (!roundSettings[rIndex] || !players.length) return;
                 const roundSuit = roundSettings[rIndex].suit;
                 const outPlayerIndex = roundSettings[rIndex].outPlayer;
                 const outType = roundSettings[rIndex].outType;
@@ -497,38 +653,34 @@
                     const isTeammateOfWinner = isTeamMode && outPlayerIndex !== null && getTeam(pIndex) === getTeam(outPlayerIndex);
 
                     if (isOutPlayer) {
-                        // Winner
                         score = outType === 'joker' ? -500 : -100;
                     } else if (isTeammateOfWinner) {
-                        // Teammate of winner in team mode, no leftover cards to count
                         score = 0;
                     } else {
-                        // Regular scoring for opponents or in non-team mode
                         const leftoverCardsInput = document.getElementById(`leftover-${pIndex}-${rIndex}`);
                         const leftoverCards = leftoverCardsInput ? parseInt(leftoverCardsInput.value, 10) : 0;
                         
-                        // Calculate score based on leftover cards and multiplier, only if a suit is selected
                         if (!isNaN(leftoverCards) && leftoverCards > 0 && multipliers[roundSuit]) {
                             score = leftoverCards * multipliers[roundSuit];
                         }
                     }
 
-                    // Apply Kisterge penalty if applicable (this applies to any player)
                     if (pIndex === kistergePlayerIndex && kistergePlayerIndex !== -1) {
                         score += getKistergeScore(kistergeCardValue);
                     }
                     
-                    scores[pIndex][rIndex] = score;
+                    if (scores[pIndex]) {
+                         scores[pIndex][rIndex] = score;
+                    }
                 });
                 
                 updateScoreDisplays(rIndex);
             };
             
-            // Function to update only the score displays and totals without re-rendering the entire table
             const updateScoreDisplays = (rIndex) => {
                 players.forEach((player, pIndex) => {
                     const scoreDisplay = document.getElementById(`score-display-${pIndex}-${rIndex}`);
-                    const score = scores[pIndex][rIndex];
+                    const score = scores[pIndex] && scores[pIndex][rIndex] !== undefined ? scores[pIndex][rIndex] : 0;
                     if (scoreDisplay) {
                         scoreDisplay.textContent = score;
                         scoreDisplay.classList.toggle('bg-green-100', score < 0);
@@ -540,7 +692,7 @@
                 updateTotals();
             };
             
-            // Initial call to hide/show team mode option
+            // Initial call to hide/show team mode option on page load
             updateTeamModeOption();
         });
     </script>
