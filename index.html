@@ -12,59 +12,10 @@
       background-color: #1f2937;
     }
     
-    /* Styles voor de landschap/portretmodus */
-    @media only screen and (orientation: portrait) {
-      #main-content {
-        display: none;
-      }
-      #rotation-message {
-        display: flex;
-      }
-    }
-    @media only screen and (orientation: landscape) {
-      #main-content {
-        display: block;
-      }
-      #rotation-message {
-        display: none;
-      }
-    }
-
-    #rotation-icon-svg {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 2rem;
-    }
-    #phone-vertical {
-        transform-origin: 50% 50%;
-        animation: rotate-phone 2s infinite;
-    }
-    #rotation-arrow {
-        transform-origin: 50% 50%;
-        animation: rotate-arrow 2s infinite;
-    }
-    @keyframes rotate-phone {
-        0%, 100% { transform: rotate(0deg); }
-        50% { transform: rotate(-90deg); }
-    }
-    @keyframes rotate-arrow {
-        0%, 100% { transform: rotate(0deg); opacity: 0; }
-        15%, 85% { opacity: 1; }
-        50% { transform: rotate(90deg); }
-    }
   </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
 
-  <!-- Bericht voor portretmodus -->
-  <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
-    <svg id="rotation-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect id="phone-vertical" x="35" y="15" width="30" height="50" rx="5" stroke="#fff" stroke-width="2"/>
-      <path id="rotation-arrow" d="M75 50C75 41.7157 68.2843 35 60 35M75 50L69 55M75 50L69 45M25 50C25 58.2843 31.7157 65 40 65M25 50L31 45M25 50L31 55" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
-    <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
-  </div>
 
   <div id="main-content" class="flex flex-col items-center justify-center w-full min-h-screen">
     <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm lg:max-w-md text-center">
