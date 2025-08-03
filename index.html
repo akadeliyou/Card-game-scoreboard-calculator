@@ -106,7 +106,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Player names form -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Speler namen (max 4):</label>
+                    <label class="block text-sm font-medium text-gray-700">Speler namen (min. 2, max. 4):</label>
                     <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
                         <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
@@ -119,6 +119,10 @@
                     <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
                     <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
+            </div>
+            <!-- Player count error message -->
+            <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">
+                Het spel kan niet worden gestart met 1 speler. Zoek vrienden!
             </div>
             <button id="start-game-btn" class="mt-4 w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
         </div>
@@ -147,6 +151,7 @@
             const scoreTableBody = document.querySelector('#score-table tbody');
             const scoreTableFoot = document.querySelector('#score-table tfoot');
             const addRoundBtn = document.getElementById('add-round-btn');
+            const playerCountErrorDiv = document.getElementById('player-count-error');
             
             let players = [];
             let scores = [];
@@ -186,11 +191,15 @@
                     }
                 }
                 
-                if (names.length === 0) {
-                    // Replaced alert with a simple console log for a better user experience in the iframe.
-                    console.error('Voer ten minste één spelersnaam in.');
+                // Check if there are enough players
+                if (names.length < 2) {
+                    playerCountErrorDiv.classList.remove('hidden');
                     return;
                 }
+                
+                // Hide the error message if there are enough players
+                playerCountErrorDiv.classList.add('hidden');
+                
                 players = names;
                 rounds = parseInt(numRoundsInput.value);
                 scores = players.map(() => Array(rounds).fill(0));
@@ -259,7 +268,7 @@
                         </td>`;
                     players.forEach((player, pIndex) => {
                         const score = scores[pIndex][i];
-                        const isOutPlayer = outPlayerIndex === pIndex;
+                        const isOutPlayer = roundSettings[i].outPlayer === pIndex;
                         // The button is disabled only if the round is not configured. The icon now changes independently.
                         const isDisabledButton = !isRoundConfigured;
                         const isDisabledInput = !isRoundConfigured || isOutPlayer;
