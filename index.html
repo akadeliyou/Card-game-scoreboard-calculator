@@ -8,10 +8,32 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #1f2937; /* Donkere achtergrond voor consistentie */
         }
+
+        /* Verberg de content en toon de rotatieboodschap in portretmodus */
+        @media only screen and (orientation: portrait) {
+            #main-content {
+                display: none;
+            }
+            #rotation-message {
+                display: flex;
+            }
+        }
+        
+        /* Toon de content en verberg de rotatieboodschap in landschapsmodus */
+        @media only screen and (orientation: landscape) {
+            #main-content {
+                display: block;
+            }
+            #rotation-message {
+                display: none;
+            }
+        }
+
         /* Extra styling for the table */
         table {
             border-collapse: separate;
@@ -58,48 +80,58 @@
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
 
-    <!-- Main title and description -->
-    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
-        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">Supër Score Calculator</h1>
-        <p class="text-center text-gray-600 mb-4">
-            Voer de namen van de spelers en het aantal rondes in om de score bij te houden.
-            Negatieve punten zijn goed, positieve punten zijn slecht!
-        </p>
+    <!-- Dit wordt getoond als het scherm in portretmodus is -->
+    <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
+        <div class="mb-4 text-6xl">🔄</div>
+        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
+        <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Spelinstellingen</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Player names form -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Speler namen (max 4):</label>
-                <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" id="player-name-1" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 1">
-                    <input type="text" id="player-name-2" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 2">
-                    <input type="text" id="player-name-3" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 3">
-                    <input type="text" id="player-name-4" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 4">
+    <!-- Dit wordt getoond als het scherm in landschapsmodus is -->
+    <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-4">
+        <!-- Main title and description -->
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">Supër Score Calculator</h1>
+            <p class="text-center text-gray-600 mb-4">
+                Voer de namen van de spelers en het aantal rondes in om de score bij te houden.
+                Negatieve punten zijn goed, positieve punten zijn slecht!
+            </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Spelinstellingen</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Player names form -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Speler namen (max 4):</label>
+                    <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" id="player-name-1" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 1">
+                        <input type="text" id="player-name-2" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 2">
+                        <input type="text" id="player-name-3" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 3">
+                        <input type="text" id="player-name-4" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 4">
+                    </div>
+                </div>
+                <!-- Number of rounds form -->
+                <div>
+                    <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
+                    <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
             </div>
-            <!-- Number of rounds form -->
-            <div>
-                <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
-                <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            </div>
+            <button id="start-game-btn" class="mt-6 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors">Start Spel</button>
         </div>
-        <button id="start-game-btn" class="mt-6 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors">Start Spel</button>
-    </div>
 
-    <!-- Score table is dynamically inserted here -->
-    <div id="score-container" class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8 hidden">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Scorebord</h2>
-        <div class="overflow-x-auto">
-            <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
-                <thead></thead>
-                <tbody></thead>
-                <tfoot></tfoot>
-            </table>
+        <!-- Score table is dynamically inserted here -->
+        <div id="score-container" class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Scorebord</h2>
+            <div class="overflow-x-auto">
+                <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
+                    <thead></thead>
+                    <tbody></thead>
+                    <tfoot></tfoot>
+                </table>
+            </div>
+            <button id="add-round-btn" class="mt-6 w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors">Ronde toevoegen</button>
         </div>
-        <button id="add-round-btn" class="mt-6 w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors">Ronde toevoegen</button>
     </div>
 
     <!-- JavaScript for the score logic -->
