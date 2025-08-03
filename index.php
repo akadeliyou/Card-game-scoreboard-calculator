@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supër Score Calculator</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Extra styling for the table */
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed; /* Ensures equal width columns for players */
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            vertical-align: top;
+        }
+        th {
+            background-color: #1f2937;
+            color: #ffffff;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        tr:hover {
+            background-color: #e5e7eb;
+        }
+        /* Responsive adjustment */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0.5rem;
+            }
+            .form-section, .score-table {
+                width: 100%;
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Class to highlight unconfigured rounds */
+        .highlight-attention {
+            border: 2px solid #ef4444; /* red-500 */
+            border-radius: 0.5rem;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+            transition: all 0.3s ease-in-out;
+            padding: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+
+    <!-- Main title and description -->
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">Supër Score Calculator</h1>
+        <p class="text-center text-gray-600 mb-4">
+            Voer de namen van de spelers en het aantal rondes in om de score bij te houden.
+            Negatieve punten zijn goed, positieve punten zijn slecht!
+        </p>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Spelinstellingen</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Player names form -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Speler namen (max 4):</label>
+                <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="player-name-1" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 1">
+                    <input type="text" id="player-name-2" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 2">
+                    <input type="text" id="player-name-3" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 3">
+                    <input type="text" id="player-name-4" class="block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Speler 4">
+                </div>
+            </div>
+            <!-- Number of rounds form -->
+            <div>
+                <label for="num-rounds" class="block text-sm font-medium text-gray-700">Aantal rondes:</label>
+                <input type="number" id="num-rounds" value="1" min="1" class="mt-1 block w-full px-4 py-2 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+        </div>
+        <button id="start-game-btn" class="mt-6 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors">Start Spel</button>
+    </div>
+
+    <!-- Score table is dynamically inserted here -->
+    <div id="score-container" class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-5xl mb-8 hidden">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Scorebord</h2>
+        <div class="overflow-x-auto">
+            <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
+                <thead></thead>
+                <tbody></thead>
+                <tfoot></tfoot>
+            </table>
+        </div>
+        <button id="add-round-btn" class="mt-6 w-full py-3 px-6 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors">Ronde toevoegen</button>
+    </div>
+
+    <!-- JavaScript for the score logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startGameBtn = document.getElementById('start-game-btn');
+            const numRoundsInput = document.getElementById('num-rounds');
+            const scoreContainer = document.getElementById('score-container');
+            const scoreTableHead = document.querySelector('#score-table thead');
+            const scoreTableBody = document.querySelector('#score-table tbody');
+            const scoreTableFoot = document.querySelector('#score-table tfoot');
+            const addRoundBtn = document.getElementById('add-round-btn');
+            
+            let players = [];
+            let scores = [];
+            let roundSettings = [];
+            let rounds = 0;
+
+            const multipliers = {
+                'klaver': 2,
+                'schoppen': 3,
+                'ruiten': 4,
+                'harten': 5
+            };
+            
+            const kistergeCardValues = [
+                { value: 'A', text: 'Aas (-10)' },
+                { value: '2', text: '2 (-20)' },
+                { value: '3', text: '3 (-30)' },
+                { value: '4', text: '4 (-40)' },
+                { value: '5', text: '5 (-50)' },
+                { value: '6', text: '6 (-60)' },
+                { value: '7', text: '7 (-70)' },
+                { value: '8', text: '8 (-80)' },
+                { value: '9', text: '9 (-90)' },
+                { value: '10', text: '10 (-100)' },
+                { value: 'Boer', text: 'Boer (-100)' },
+                { value: 'Vrouw', text: 'Vrouw (-100)' },
+                { value: 'Heer', text: 'Heer (-100)' }
+            ];
+
+            // Functie om het spel te starten
+            startGameBtn.addEventListener('click', () => {
+                const names = [];
+                for (let i = 1; i <= 4; i++) {
+                    const name = document.getElementById(`player-name-${i}`).value.trim();
+                    if (name !== '') {
+                        names.push(name);
+                    }
+                }
+                
+                if (names.length === 0) {
+                    // Replaced alert with a simple console log for a better user experience in the iframe.
+                    console.error('Voer ten minste één spelersnaam in.');
+                    return;
+                }
+                players = names;
+                rounds = parseInt(numRoundsInput.value);
+                scores = players.map(() => Array(rounds).fill(0));
+                // New rounds start with a "geen" suit and a "-1" kisterge card
+                roundSettings = Array(rounds).fill(null).map(() => ({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 }));
+
+                scoreContainer.classList.remove('hidden');
+                renderScoreTable();
+            });
+
+            // Functie om een nieuwe ronde toe te voegen
+            addRoundBtn.addEventListener('click', () => {
+                rounds++;
+                scores.forEach(playerScores => playerScores.push(0));
+                // New round also starts with "geen" suit and "-1" kisterge card
+                roundSettings.push({ suit: 'geen', kistergeCard: '-1', outPlayer: null, outType: 'standaard', kistergePlayer: -1 });
+                renderScoreTable();
+            });
+
+            // Functie om de HTML-tabel te renderen
+            const renderScoreTable = () => {
+                // Table header row
+                let headerHtml = '<tr><th class="rounded-tl-2xl w-48">Ronde</th>';
+                players.forEach((player, pIndex) => {
+                    const isLastPlayer = pIndex === players.length - 1;
+                    const roundedClass = isLastPlayer ? 'rounded-tr-2xl' : '';
+                    headerHtml += `<th class="text-white bg-blue-500 ${roundedClass}">${player}</th>`;
+                });
+                headerHtml += '</tr>';
+                scoreTableHead.innerHTML = headerHtml;
+
+                // Rows for each round
+                let bodyHtml = '';
+                for (let i = 0; i < rounds; i++) {
+                    const outPlayerIndex = roundSettings[i].outPlayer;
+                    const kistergePlayerIndex = roundSettings[i].kistergePlayer;
+                    // A round is configured if both a suit AND a kisterge card have been selected
+                    const isRoundConfigured = roundSettings[i].kistergeCard !== '-1' && roundSettings[i].suit !== 'geen';
+
+                    bodyHtml += `<tr>
+                        <td class="font-bold">
+                            Ronde ${i + 1}
+                            <div id="round-settings-${i}" class="mt-2 space-y-2 text-sm ${isRoundConfigured ? '' : 'highlight-attention'}">
+                                <div>
+                                    <label class="block font-medium text-gray-700">Gedraaide kaart:</label>
+                                    <select id="suit-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="geen" ${roundSettings[i].suit === 'geen' ? 'selected' : ''}>♣️♠️♦️♥️</option>
+                                        <option value="klaver" ${roundSettings[i].suit === 'klaver' ? 'selected' : ''}>♣️ Klaver (x2)</option>
+                                        <option value="schoppen" ${roundSettings[i].suit === 'schoppen' ? 'selected' : ''}>♠️ Schoppen (x3)</option>
+                                        <option value="ruiten" ${roundSettings[i].suit === 'ruiten' ? 'selected' : ''}>♦️ Ruiten (x4)</option>
+                                        <option value="harten" ${roundSettings[i].suit === 'harten' ? 'selected' : ''}>♥️ Harten (x5)</option>
+                                    </select>
+                                    <select id="kisterge-card-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="-1">Geen</option>
+                                        ${kistergeCardValues.map(card => `<option value="${card.value}" ${roundSettings[i].kistergeCard === card.value ? 'selected' : ''}>${card.text}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-medium text-gray-700">Speler met "Kisterge":</label>
+                                    <select id="kisterge-player-${i}" onchange="window.handleRoundSettingsChange(${i})" class="mt-1 block w-full px-2 py-1 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500" ${isRoundConfigured ? '' : 'disabled'}>
+                                        <option value="-1">Geen</option>
+                                        ${players.map((p, pIdx) => `<option value="${pIdx}" ${parseInt(kistergePlayerIndex) === pIdx ? 'selected' : ''}>${p}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        </td>`;
+                    players.forEach((player, pIndex) => {
+                        const score = scores[pIndex][i];
+                        const isOutPlayer = outPlayerIndex === pIndex;
+                        // The button is disabled only if the round is not configured. The icon now changes independently.
+                        const isDisabledButton = !isRoundConfigured;
+                        const isDisabledInput = !isRoundConfigured || isOutPlayer;
+                        const outType = roundSettings[i].outType;
+                        const standaardClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                        const jokerClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+
+                        // New logic for the button icon: show a trophy if no winner is selected, otherwise show a cross if it's not the winner.
+                        const buttonIcon = isOutPlayer ? '🏆' : (outPlayerIndex !== null ? '❌' : '🏆');
+                        const buttonClass = isOutPlayer ? 'bg-green-500' : (outPlayerIndex !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
+
+
+                        bodyHtml += `<td>
+                            <div class="score-input-container p-2 rounded-lg bg-gray-50 border-gray-200 border">
+                                <button id="out-btn-${pIndex}-${i}" onclick="window.toggleOutStatus(${i}, ${pIndex})"
+                                    class="w-full py-2 px-4 rounded-lg font-bold transition-colors mb-2 text-white flex items-center justify-center space-x-2
+                                    ${buttonClass}
+                                    ${isDisabledButton ? 'opacity-50 cursor-not-allowed' : ''}"
+                                    ${isDisabledButton ? 'disabled' : ''}>
+                                    ${buttonIcon}
+                                </button>
+                                <div id="out-details-${pIndex}-${i}" class="out-details mt-2 space-y-2 ${!isOutPlayer ? 'hidden' : ''}">
+                                    <div class="flex justify-center">
+                                        <button id="standaard-btn-${i}" onclick="window.setOutType(${i}, 'standaard')" class="px-1.5 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standaardClass}" ${isDisabledButton ? 'disabled' : ''}>Standaard</button>
+                                        <button id="joker-btn-${i}" onclick="window.setOutType(${i}, 'joker')" class="px-1.5 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerClass}" ${isDisabledButton ? 'disabled' : ''}>Joker</button>
+                                    </div>
+                                </div>
+                                <div id="leftover-details-${pIndex}-${i}" class="leftover-details mt-2 space-y-2 ${isOutPlayer ? 'hidden' : ''}">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Aantal restkaarten:</label>
+                                        <input type="number" id="leftover-${pIndex}-${i}" oninput="window.recalculateRoundScores(${i})" class="mt-1 block w-full px-3 py-1.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" value="${getLeftoverCards(pIndex, i)}" min="0" ${isDisabledInput ? 'disabled' : ''}>
+                                    </div>
+                                </div>
+                                <p id="score-display-${pIndex}-${i}" class="mt-2 text-lg font-bold text-center p-2 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${score !== null ? score : '0'}</p>
+                            </div>
+                        </td>`;
+                    });
+                    bodyHtml += '</tr>';
+                }
+                scoreTableBody.innerHTML = bodyHtml;
+                
+                updateTotals();
+            };
+
+            // Get the leftover cards value, defaults to 0
+            const getLeftoverCards = (pIndex, rIndex) => {
+                const input = document.getElementById(`leftover-${pIndex}-${rIndex}`);
+                return input ? parseInt(input.value, 10) : 0;
+            };
+
+            // Update total scores in the table footer
+            const updateTotals = () => {
+                let playerNamesHtml = '<tr><td class="font-bold"></td>';
+                players.forEach(player => {
+                    playerNamesHtml += `<td class="text-white bg-blue-500">${player}</td>`;
+                });
+                playerNamesHtml += '</tr>';
+
+                let totalScoresHtml = '<tr><td class="font-bold rounded-bl-2xl">Totaal</td>';
+                let totalScores = players.map((_, index) => {
+                    return scores[index].reduce((acc, current) => acc + (current || 0), 0);
+                });
+                totalScores.forEach((total, tIndex) => {
+                    const isLastTotal = tIndex === totalScores.length - 1;
+                    const roundedClass = isLastTotal ? 'rounded-br-2xl' : '';
+                    totalScoresHtml += `<td class="text-xl font-bold bg-gray-200 text-center ${roundedClass}">${total}</td>`;
+                });
+                totalScoresHtml += '</tr>';
+
+                scoreTableFoot.innerHTML = playerNamesHtml + totalScoresHtml;
+            };
+
+            // Calculate the score for the Kisterge card
+            const getKistergeScore = (cardValue) => {
+                switch (cardValue) {
+                    case 'A': return -10;
+                    case '10':
+                    case 'Boer':
+                    case 'Vrouw':
+                    case 'Heer': return -100;
+                    default: return -10 * parseInt(cardValue, 10);
+                }
+            };
+
+            // Handle changes in round settings (suit, kisterge player, kisterge card)
+            window.handleRoundSettingsChange = (rIndex) => {
+                const suitSelect = document.getElementById(`suit-${rIndex}`);
+                const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
+                const kistergeCardSelect = document.getElementById(`kisterge-card-${rIndex}`);
+                
+                roundSettings[rIndex].suit = suitSelect.value;
+                roundSettings[rIndex].kistergePlayer = parseInt(kistergePlayerSelect.value, 10);
+                roundSettings[rIndex].kistergeCard = kistergeCardSelect.value;
+                
+                // Call a function to enable/disable player inputs based on the card selection
+                updateRoundUiState(rIndex);
+                window.recalculateRoundScores(rIndex);
+            };
+
+            // New function to handle enabling/disabling the UI for a round
+            const updateRoundUiState = (rIndex) => {
+                // A round is configured only when a suit and a kisterge card are selected.
+                const isRoundConfigured = roundSettings[rIndex].kistergeCard !== '-1' && roundSettings[rIndex].suit !== 'geen';
+                const kistergePlayerSelect = document.getElementById(`kisterge-player-${rIndex}`);
+                const roundSettingsDiv = document.getElementById(`round-settings-${rIndex}`);
+                
+                // Add or remove the highlight class based on configuration
+                roundSettingsDiv.classList.toggle('highlight-attention', !isRoundConfigured);
+                
+                // Enable/disable the Kisterge player select
+                if (kistergePlayerSelect) {
+                    kistergePlayerSelect.disabled = !isRoundConfigured;
+                }
+
+                players.forEach((_, pIndex) => {
+                    const outBtn = document.getElementById(`out-btn-${pIndex}-${rIndex}`);
+                    const leftoverInput = document.getElementById(`leftover-${pIndex}-${rIndex}`);
+                    
+                    if (outBtn) {
+                        outBtn.disabled = !isRoundConfigured;
+                        outBtn.classList.toggle('opacity-50', !isRoundConfigured);
+                        outBtn.classList.toggle('cursor-not-allowed', !isRoundConfigured);
+                    }
+                    if (leftoverInput) {
+                        // The leftover input should only be disabled if the round is not configured or if the current player is the winner.
+                        const isOutPlayer = roundSettings[rIndex].outPlayer === pIndex;
+                        leftoverInput.disabled = !isRoundConfigured || isOutPlayer;
+                    }
+                });
+            };
+
+            // Toggle the 'out' status for a player in a round
+            window.toggleOutStatus = (rIndex, pIndex) => {
+                const currentOutPlayer = roundSettings[rIndex].outPlayer;
+                if (currentOutPlayer === pIndex) {
+                    roundSettings[rIndex].outPlayer = null;
+                } else {
+                    roundSettings[rIndex].outPlayer = pIndex;
+                }
+                renderScoreTable();
+                window.recalculateRoundScores(rIndex);
+            };
+
+            // Handle setting the out type with buttons
+            window.setOutType = (rIndex, type) => {
+                roundSettings[rIndex].outType = type;
+                const standaardBtn = document.getElementById(`standaard-btn-${rIndex}`);
+                const jokerBtn = document.getElementById(`joker-btn-${rIndex}`);
+                
+                if (type === 'standaard') {
+                    standaardBtn.classList.add('bg-blue-600', 'text-white');
+                    standaardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                    jokerBtn.classList.remove('bg-blue-600', 'text-white');
+                    jokerBtn.classList.add('bg-gray-200', 'text-gray-700');
+                } else {
+                    jokerBtn.classList.add('bg-blue-600', 'text-white');
+                    jokerBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                    standaardBtn.classList.remove('bg-blue-600', 'text-white');
+                    standaardBtn.classList.add('bg-gray-200', 'text-gray-700');
+                }
+                
+                window.recalculateRoundScores(rIndex);
+            };
+
+            // Recalculate all scores for a given round
+            window.recalculateRoundScores = (rIndex) => {
+                const roundSuit = roundSettings[rIndex].suit;
+                const outPlayerIndex = roundSettings[rIndex].outPlayer;
+                const outType = roundSettings[rIndex].outType;
+                const kistergePlayerIndex = roundSettings[rIndex].kistergePlayer;
+                const kistergeCardValue = roundSettings[rIndex].kistergeCard;
+
+                players.forEach((player, pIndex) => {
+                    let score = 0;
+                    if (pIndex === outPlayerIndex) {
+                        // Player went out
+                        score = outType === 'joker' ? -500 : -100;
+                    } else {
+                        // Player did not go out
+                        const leftoverCardsInput = document.getElementById(`leftover-${pIndex}-${rIndex}`);
+                        const leftoverCards = leftoverCardsInput ? parseInt(leftoverCardsInput.value, 10) : 0;
+                        
+                        // Calculate score based on leftover cards and multiplier, only if a suit is selected
+                        if (!isNaN(leftoverCards) && leftoverCards > 0 && multipliers[roundSuit]) {
+                            score = leftoverCards * multipliers[roundSuit];
+                        }
+                    }
+
+                    // Apply Kisterge penalty if applicable
+                    if (pIndex === kistergePlayerIndex && kistergePlayerIndex !== -1) {
+                        score += getKistergeScore(kistergeCardValue);
+                    }
+                    
+                    scores[pIndex][rIndex] = score;
+                });
+                
+                updateScoreDisplays(rIndex);
+            };
+            
+            // Function to update only the score displays and totals without re-rendering the entire table
+            const updateScoreDisplays = (rIndex) => {
+                players.forEach((player, pIndex) => {
+                    const scoreDisplay = document.getElementById(`score-display-${pIndex}-${rIndex}`);
+                    const score = scores[pIndex][rIndex];
+                    if (scoreDisplay) {
+                        scoreDisplay.textContent = score;
+                        scoreDisplay.classList.toggle('bg-green-100', score < 0);
+                        scoreDisplay.classList.toggle('text-green-700', score < 0);
+                        scoreDisplay.classList.toggle('bg-red-100', score >= 0);
+                        scoreDisplay.classList.toggle('text-red-700', score >= 0);
+                    }
+                });
+                updateTotals();
+            };
+        });
+    </script>
+</body>
+</html>
