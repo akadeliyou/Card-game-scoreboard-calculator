@@ -180,7 +180,6 @@
           </div>
         </div>
         <div>
-          <!-- Het invoerveld voor het aantal rondes is verwijderd -->
           <div id="team-mode-container" class="mt-3 hidden">
             <div class="flex items-center">
               <input id="team-mode-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
@@ -380,6 +379,12 @@
         scoreTableBody.innerHTML = '';
         scoreTableFoot.innerHTML = '';
       });
+      
+      // Functie om de inhoud van een input-veld te selecteren
+      window.selectOnFocus = (element) => {
+        element.select();
+      };
+
 
       // Functie om de scoretabel te renderen
       const renderTable = () => {
@@ -474,7 +479,7 @@
             const leftoverDetailsHiddenClass = isLeftoverInputDisabled ? 'hidden' : '';
             tableBodyHtml += `<div id="leftover-details-${playerIndex}-${roundIndex}" class="leftover-details mt-1 space-y-1 ${leftoverDetailsHiddenClass}">`;
             tableBodyHtml += `<label class="block text-xs font-medium text-gray-700">Restkaarten:</label>`;
-            tableBodyHtml += `<input type="number" id="leftover-${playerIndex}-${roundIndex}" oninput="window.recalculateRoundScores(${roundIndex})" onfocus="this.select()" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${score > 0 && suitMultipliers[playerIndex] ? score / suitMultipliers[playerIndex] : 0}" min="0" ${isLeftoverInputDisabled ? 'disabled' : ''}>`;
+            tableBodyHtml += `<input type="tel" id="leftover-${playerIndex}-${roundIndex}" oninput="window.recalculateRoundScores(${roundIndex})" onfocus="window.selectOnFocus(this)" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs" value="${score > 0 && suitMultipliers[playerIndex] ? score / suitMultipliers[playerIndex] : 0}" min="0" ${isLeftoverInputDisabled ? 'disabled' : ''}>`;
             tableBodyHtml += `</div>`;
 
             // Score-display
