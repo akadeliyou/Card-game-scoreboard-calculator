@@ -442,15 +442,14 @@
                                 html += `<div class="text-xs font-medium text-gray-500">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}, Slagen: ${tricks}</div>`;
                             } else {
                                 html += `<div class="text-lg font-bold text-gray-400">-</div>`;
-                                html += `<div class="text-xs font-medium text-gray-500">Bod: -</div>`;
                             }
                         } else {
-                            html += `<div class="text-sm font-bold text-gray-700">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}</div>`;
                             if (pIndex === biddingPlayerIndexInRound) {
+                                html += `<div class="text-sm font-bold text-gray-700">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}</div>`;
                                 html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24" placeholder="Slagen" min="0" max="13"></div>`;
                                 html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
                             } else {
-                                html += `<div class="text-xs font-medium text-gray-500 mt-2">-</div>`;
+                                html += `<div class="text-sm font-bold text-gray-700">Bod: -</div>`;
                             }
                         }
                         html += `</div>`;
