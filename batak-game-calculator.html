@@ -75,6 +75,16 @@
         align-items: center;
         gap: 0.5rem;
     }
+    
+    /* BELANGRIJKE WIJZIGING: Stijl voor de inhoud van de eerste cel, niet de cel zelf */
+    .round-dealer-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%; /* Zorg ervoor dat de div de volledige hoogte vult */
+        padding: .5rem;
+    }
 
     /* Score styling */
     .score-win {
@@ -147,20 +157,35 @@
       <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700">Speler namen (altijd 4):</label>
+          <label class="block text-sm font-medium text-gray-700">Spelmodus:</label>
+          <select id="game-mode-select" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <option value="solo">Solo Batak</option>
+            <option value="teams">Team Batak</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Aantal spelers:</label>
+          <select id="player-count-select" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <option value="4">4 spelers</option>
+            <option value="3">3 spelers</option>
+          </select>
+        </div>
+        <div>
+            <label for="min-bid-input" class="block text-sm font-medium text-gray-700">Minimale bod:</label>
+            <input type="number" id="min-bid-input" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" value="6">
+        </div>
+        <div>
+            <label for="max-bid-input" class="block text-sm font-medium text-gray-700">Maximale bod:</label>
+            <input type="number" id="max-bid-input" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" value="13">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Speler namen:</label>
           <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
             <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
             <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
             <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
           </div>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Spelmodus:</label>
-          <select id="game-mode-select" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-            <option value="solo">Solo Batak</option>
-            <option value="teams">Team Batak</option>
-          </select>
         </div>
       </div>
       <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Vul de namen in van alle 4 spelers om te beginnen.</div>
@@ -178,7 +203,7 @@
       <div class="overflow-x-auto">
         <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
           <thead></thead>
-          <tbody></tbody>
+          <tbody></thead>
           <tfoot></tfoot>
         </table>
       </div>
@@ -197,6 +222,8 @@
             <label for="modal-bid-input" class="block text-sm font-medium text-gray-700 mb-1">Bod (0-13):</label>
             <input type="number" id="modal-bid-input" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" min="0" max="13" placeholder="Bijv. 6">
         </div>
+        <!-- Nieuwe validatie melding in de modal -->
+        <div id="modal-validation-message" class="mt-2 p-2 bg-red-100 text-red-700 font-bold rounded-lg hidden text-sm"></div>
         <div class="flex justify-end space-x-2">
             <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-300 transition-colors text-sm">Annuleren</button>
             <button id="modal-submit-btn" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm">Bevestigen</button>
@@ -223,13 +250,18 @@
       const playerCountError = document.getElementById('player-count-error');
       const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
       const gameModeSelect = document.getElementById('game-mode-select');
+      const playerCountSelect = document.getElementById('player-count-select');
+      const playerName4Input = document.getElementById('player-name-4');
       const validationMessageBox = document.getElementById('validation-message-box');
+      const minBidInput = document.getElementById('min-bid-input');
+      const maxBidInput = document.getElementById('max-bid-input');
 
       // Modal elementen
       const bidModal = document.getElementById('bid-modal');
       const modalPlayerName = document.getElementById('modal-player-name');
       const modalRoundNumber = document.getElementById('modal-round-number');
       const modalBidInput = document.getElementById('modal-bid-input');
+      const modalValidationMessage = document.getElementById('modal-validation-message');
       const modalCancelBtn = document.getElementById('modal-cancel-btn');
       const modalSubmitBtn = document.getElementById('modal-submit-btn');
 
@@ -240,11 +272,84 @@
       let playerScores = [];
       let numRounds = 0;
       let gameMode = 'solo';
+      let playerCount = 4;
+
+      // Event listener voor spelmodus en aantal spelers
+      gameModeSelect.addEventListener('change', (e) => {
+        gameMode = e.target.value;
+        if (gameMode === 'teams') {
+            playerCountSelect.value = '4';
+            playerCountSelect.disabled = true;
+            playerName4Input.classList.remove('hidden');
+        } else {
+            playerCountSelect.disabled = false;
+        }
+        updatePlayerNameInputs();
+      });
+
+      playerCountSelect.addEventListener('change', (e) => {
+        playerCount = parseInt(e.target.value, 10);
+        updatePlayerNameInputs();
+        updateDefaultBidSettings();
+      });
+
+      minBidInput.addEventListener('input', (e) => {
+          const minVal = parseInt(e.target.value, 10);
+          const maxVal = parseInt(maxBidInput.value, 10);
+          if (minVal > maxVal) {
+              e.target.value = maxVal;
+          }
+      });
+
+      maxBidInput.addEventListener('input', (e) => {
+          const maxVal = parseInt(e.target.value, 10);
+          const totalTricksInGame = playerCount === 3 ? 16 : 13;
+          if (maxVal > totalTricksInGame) {
+              e.target.value = totalTricksInGame;
+              showValidationMessage(`Fout: Maximale bod kan niet hoger zijn dan ${totalTricksInGame}.`, true);
+          }
+      });
+
+
+      const updatePlayerNameInputs = () => {
+        if (gameMode === 'solo') {
+            const newPlayerCount = parseInt(playerCountSelect.value, 10);
+            playerNameInputs.forEach((input, index) => {
+                if (index < newPlayerCount) {
+                    input.classList.remove('hidden');
+                } else {
+                    input.classList.add('hidden');
+                    input.value = ''; // Clear value for hidden fields
+                }
+            });
+            playerCount = newPlayerCount;
+        } else if (gameMode === 'teams') {
+             // Team modus heeft altijd 4 spelers
+            playerNameInputs.forEach(input => input.classList.remove('hidden'));
+            playerCount = 4;
+        }
+      };
+
+      const updateDefaultBidSettings = () => {
+          if (playerCount === 3) {
+              maxBidInput.value = 16;
+              maxBidInput.max = 16; 
+              minBidInput.value = 6;
+              minBidInput.min = 0;
+          } else {
+              maxBidInput.value = 13;
+              maxBidInput.max = 13; 
+              minBidInput.value = 6;
+              minBidInput.min = 0;
+          }
+      };
 
       // Functie voor het starten van het spel
       startGameBtn.addEventListener('click', () => {
-        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
-        if (activePlayerNames.length !== 4) {
+        const activePlayerNames = playerNameInputs.filter(input => !input.classList.contains('hidden')).map(input => input.value.trim()).filter(name => name !== '');
+        
+        if (activePlayerNames.length !== playerCount) {
+          playerCountError.innerText = `Vul de namen in van alle ${playerCount} spelers om te beginnen.`;
           playerCountError.classList.remove('hidden');
           return;
         }
@@ -259,10 +364,11 @@
 
         playerNames = activePlayerNames;
         gameMode = gameModeSelect.value;
+        playerCount = playerNames.length;
         numRounds = 1; // Start altijd met 1 ronde
         playerBids = playerNames.map(() => Array(numRounds).fill(null));
         playerTricks = playerNames.map(() => Array(numRounds).fill(null));
-        playerScores = playerNames.map(() => Array(numRounds).fill(null)); // null als score nog niet is berekend
+        playerScores = playerNames.map(() => Array(numRounds).fill(null));
 
         renderTable();
         scoreContainer.scrollIntoView({ behavior: 'smooth' });
@@ -270,8 +376,9 @@
 
       // Functie voor het updaten van de spelinstellingen
       updateGameBtn.addEventListener('click', () => {
-        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
-        if (activePlayerNames.length !== 4) {
+        const activePlayerNames = playerNameInputs.filter(input => !input.classList.contains('hidden')).map(input => input.value.trim()).filter(name => name !== '');
+        if (activePlayerNames.length !== playerCount) {
+          playerCountError.innerText = `Vul de namen in van alle ${playerCount} spelers om de instellingen toe te passen.`;
           playerCountError.classList.remove('hidden');
           return;
         }
@@ -279,11 +386,20 @@
         playerCountError.classList.add('hidden');
         playerNames = activePlayerNames;
         gameMode = gameModeSelect.value;
+        playerCount = playerNames.length;
         renderTable();
       });
 
       // Functie om een ronde toe te voegen
       addRoundBtn.addEventListener('click', () => {
+        const currentRoundIndex = numRounds - 1;
+        const isCurrentRoundLocked = playerScores.every(scores => scores[currentRoundIndex] !== null);
+        
+        if (!isCurrentRoundLocked) {
+            showValidationMessage("Fout: Bereken eerst de score van de huidige ronde voordat u een nieuwe ronde toevoegt.", true);
+            return;
+        }
+
         numRounds++;
         playerBids.forEach(bids => bids.push(null));
         playerTricks.forEach(tricks => tricks.push(null));
@@ -299,9 +415,13 @@
         playerScores = [];
         numRounds = 0;
         gameMode = 'solo';
+        playerCount = 4;
 
         playerNameInputs.forEach(input => input.value = '');
         gameModeSelect.value = 'solo';
+        playerCountSelect.value = '4';
+        playerCountSelect.disabled = false;
+        playerNameInputs.forEach(input => input.classList.remove('hidden'));
         scoreContainer.classList.add('hidden');
         startGameBtn.classList.remove('hidden');
         updateGameBtn.classList.add('hidden');
@@ -311,6 +431,7 @@
         scoreTableHead.innerHTML = '';
         scoreTableBody.innerHTML = '';
         scoreTableFoot.innerHTML = '';
+        updateDefaultBidSettings();
       });
       
       // Functie om de inhoud van een input-veld te selecteren
@@ -318,7 +439,7 @@
         element.select();
       };
 
-      // Toon een validatiebericht
+      // Toon een validatiebericht (gebruikt voor meldingen buiten de modal)
       const showValidationMessage = (message, isError = true) => {
           validationMessageBox.innerText = message;
           validationMessageBox.classList.remove('hidden');
@@ -329,11 +450,34 @@
           }, 5000);
       };
 
+      // Toon een validatiebericht in de modal
+      const showModalValidationMessage = (message) => {
+        modalValidationMessage.innerText = message;
+        modalValidationMessage.classList.remove('hidden');
+      };
+      
+      // Verberg de validatiebericht in de modal
+      const hideModalValidationMessage = () => {
+        modalValidationMessage.classList.add('hidden');
+      };
+
       // Functie om de scoretabel te renderen
       const renderTable = () => {
+        const totalTricksInGame = playerCount === 3 ? 16 : 13;
+        const minBid = parseInt(minBidInput.value, 10);
+        const maxBid = parseInt(maxBidInput.value, 10);
+
         if (gameMode === 'solo') {
-            const displayPlayerOrder = [0, 1, 2, 3];
-            let tableHeadHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
+            const displayPlayerOrder = Array.from({ length: playerCount }, (_, i) => i);
+            const colWidth = 100 / (playerCount + 1);
+            
+            let tableHeadHtml = '<colgroup>';
+            for (let i = 0; i < playerCount + 1; i++) {
+                tableHeadHtml += `<col style="width:${colWidth}%">`;
+            }
+            tableHeadHtml += '</colgroup>';
+
+            tableHeadHtml += '<tr><th class="rounded-tl-2xl">Ronde</th>';
             displayPlayerOrder.forEach((playerIndex, i) => {
                 const isLastPlayer = i === displayPlayerOrder.length - 1;
                 const cornerClass = isLastPlayer ? 'rounded-tr-2xl' : '';
@@ -344,11 +488,14 @@
 
             let tableBodyHtml = '';
             for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
-                const dealerName = playerNames[roundIndex % playerNames.length];
-                tableBodyHtml += `<tr><td class="font-bold text-sm flex flex-col items-center justify-center">`;
+                const dealerName = playerNames[roundIndex % playerCount];
+                
+                // BELANGRIJKE WIJZIGING: Gebruik een interne div voor Flexbox styling
+                tableBodyHtml += `<tr><td class="font-bold text-sm">`;
+                tableBodyHtml += `<div class="round-dealer-content">`;
                 tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
-                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Deler: ${dealerName}</span>`;
-                tableBodyHtml += `</td>`;
+                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Dealer: ${dealerName}</span>`;
+                tableBodyHtml += `</div></td>`;
 
                 const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
                 const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
@@ -381,11 +528,10 @@
                         const tricksInputId = `tricks-${playerIndex}-${roundIndex}`;
                         if (isBiddingPlayer) {
                             tableBodyHtml += `<div class="text-sm font-bold text-gray-700">Bod: ${bid}</div>`;
-                        } else {
-                            tableBodyHtml += `<div class="text-sm font-bold text-gray-700">Bod: -</div>`;
                         }
+                        // Toon altijd de input voor slagen, ongeacht of de speler heeft geboden.
                         tableBodyHtml += `<div class="input-container space-x-1">`;
-                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input" placeholder="Slag" min="0" max="13">`;
+                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input" placeholder="Slag" min="0" max="${totalTricksInGame}">`;
                         tableBodyHtml += `</div>`;
                         if (isBiddingPlayer) {
                             tableBodyHtml += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
@@ -399,31 +545,40 @@
 
         } else if (gameMode === 'teams') {
             const playerDisplayOrder = [0, 2, 1, 3]; // Visuele volgorde in de tabel
-            let tableHeadHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
-            playerDisplayOrder.forEach((pIndex, i) => {
-                const isLastPlayer = i === playerDisplayOrder.length - 1;
-                const cornerClass = isLastPlayer ? 'rounded-tr-2xl' : '';
-                tableHeadHtml += `<th class="${cornerClass} text-sm">${playerNames[pIndex]}</th>`;
-            });
+            const colWidth = 100 / (playerCount + 1); // 1 voor Ronde, 4 voor spelers
+            
+            let tableHeadHtml = '<colgroup>';
+            tableHeadHtml += `<col style="width:${colWidth}%">`; // Ronde
+            tableHeadHtml += `<col style="width:${colWidth*2}%">`; // Team 1
+            tableHeadHtml += `<col style="width:${colWidth*2}%">`; // Team 2
+            tableHeadHtml += '</colgroup>';
+
+            tableHeadHtml += '<tr><th colspan="1" class="rounded-tl-2xl">Ronde</th>';
+            tableHeadHtml += `<th colspan="2" class="text-sm">Team 1</th>`;
+            tableHeadHtml += `<th colspan="2" class="rounded-tr-2xl text-sm">Team 2</th>`;
             tableHeadHtml += '</tr>';
             scoreTableHead.innerHTML = tableHeadHtml;
 
             let tableBodyHtml = '';
             for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
-                const dealerName = playerNames[roundIndex % playerNames.length];
+                const dealerName = playerNames[roundIndex % playerCount];
+                
+                // BELANGRIJKE WIJZIGING: Gebruik een interne div voor Flexbox styling
+                tableBodyHtml += `<tr><td class="font-bold text-sm">`;
+                tableBodyHtml += `<div class="round-dealer-content">`;
+                tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
+                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Dealer: ${dealerName}</span>`;
+                tableBodyHtml += `</div></td>`;
+
                 const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
                 const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
 
-                tableBodyHtml += `<tr><td class="font-bold text-sm flex flex-col items-center justify-center">`;
-                tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
-                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Deler: ${dealerName}</span>`;
-                tableBodyHtml += `</td>`;
-
                 if (biddingPlayerIndexInRound === -1) {
                     // Geen bod ingevoerd, toon de biedknoppen
-                    playerDisplayOrder.forEach(pIndex => {
-                        tableBodyHtml += `<td><button onclick="window.showBidModal(${pIndex}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
-                    });
+                    tableBodyHtml += `<td><button onclick="window.showBidModal(0, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
+                    tableBodyHtml += `<td><button onclick="window.showBidModal(2, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
+                    tableBodyHtml += `<td><button onclick="window.showBidModal(1, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
+                    tableBodyHtml += `<td><button onclick="window.showBidModal(3, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
                 } else {
                     const biddingTeamPlayers = (biddingPlayerIndexInRound % 2) === 0 ? [0, 2] : [1, 3];
                     const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
@@ -449,7 +604,7 @@
                                 html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24" placeholder="Slagen" min="0" max="13"></div>`;
                                 html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
                             } else {
-                                html += `<div class="text-sm font-bold text-gray-700">Bod: -</div>`;
+                                html += `<div class="text-sm font-bold text-gray-700">-</div>`;
                             }
                         }
                         html += `</div>`;
@@ -457,7 +612,7 @@
                     };
 
                     // Bepaal de HTML voor het andere team
-                    const getOtherTeamHtml = (tricks, isLocked) => {
+                    const getOtherTeamHtml = (pIndex, tricks, isLocked) => {
                         let html = `<div class="action-container">`;
                         if (isLocked) {
                             const scoreText = tricks !== null ? (tricks > 0 ? `+${tricks}` : '0') : '-';
@@ -474,9 +629,11 @@
                     if (biddingTeamPlayers[0] === 0) { // Team 1 heeft geboden
                         tableBodyHtml += `<td>${getBiddingTeamHtml(0)}</td>`;
                         tableBodyHtml += `<td>${getBiddingTeamHtml(2)}</td>`;
-                        tableBodyHtml += `<td colspan="2">${getOtherTeamHtml(otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += `<td>${getOtherTeamHtml(1, otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += `<td>${getOtherTeamHtml(3, otherTeamTricks, isRoundLocked)}</td>`;
                     } else { // Team 2 heeft geboden
-                        tableBodyHtml += `<td colspan="2">${getOtherTeamHtml(otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += `<td>${getOtherTeamHtml(0, otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += `<td>${getOtherTeamHtml(2, otherTeamTricks, isRoundLocked)}</td>`;
                         tableBodyHtml += `<td>${getBiddingTeamHtml(1)}</td>`;
                         tableBodyHtml += `<td>${getBiddingTeamHtml(3)}</td>`;
                     }
@@ -491,9 +648,18 @@
 
       // Functie om de aangepaste bied-modal te tonen
       window.showBidModal = (playerIndex, roundIndex) => {
+        const minBid = parseInt(minBidInput.value, 10);
+        const maxBid = parseInt(maxBidInput.value, 10);
         modalPlayerName.innerText = playerNames[playerIndex];
         modalRoundNumber.innerText = roundIndex + 1;
         modalBidInput.value = '';
+        modalBidInput.min = minBid;
+        modalBidInput.max = maxBid;
+        modalBidInput.placeholder = `Bijv. ${Math.floor((minBid + maxBid) / 2)}`;
+        document.querySelector('#modal-bid-input').max = maxBid;
+        document.querySelector('#modal-bid-input').min = minBid;
+        document.querySelector('#bid-modal label').innerText = `Bod (${minBid}-${maxBid}):`;
+        hideModalValidationMessage();
         bidModal.dataset.playerIndex = playerIndex;
         bidModal.dataset.roundIndex = roundIndex;
         bidModal.classList.remove('hidden');
@@ -510,15 +676,17 @@
         const bid = modalBidInput.value.trim();
         const playerIndex = parseInt(bidModal.dataset.playerIndex, 10);
         const roundIndex = parseInt(bidModal.dataset.roundIndex, 10);
+        const minBid = parseInt(minBidInput.value, 10);
+        const maxBid = parseInt(maxBidInput.value, 10);
         
         if (bid === '' || isNaN(bid)) {
-          showValidationMessage("Fout: Ongeldige bieding. Vul een getal in.", true);
+          showModalValidationMessage("Fout: Ongeldige bieding. Vul een getal in.");
           return;
         }
 
         const bidValue = parseInt(bid, 10);
-        if (bidValue < 0 || bidValue > 13) {
-            showValidationMessage("Fout: Het bod moet tussen 0 en 13 liggen.", true);
+        if (bidValue < minBid || bidValue > maxBid) {
+            showModalValidationMessage(`Fout: Het bod moet tussen ${minBid} en ${maxBid} liggen.`);
             return;
         }
         
@@ -533,6 +701,8 @@
 
       // Functie om de scores te berekenen en vast te leggen na een klik op 'Bereken Score'
       window.handleCalculateScore = (biddingPlayerIndex, roundIndex) => {
+        const totalTricksInGame = playerCount === 3 ? 16 : 13;
+        
         if (gameMode === 'teams') {
             const biddingTeamPlayers = (biddingPlayerIndex % 2) === 0 ? [0, 2] : [1, 3];
             const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
@@ -541,11 +711,11 @@
             
             const biddingTeamTricks = biddingTeamTricksInput.value.trim() !== '' ? parseInt(biddingTeamTricksInput.value, 10) : null;
             
-            if (biddingTeamTricks === null || isNaN(biddingTeamTricks) || biddingTeamTricks < 0 || biddingTeamTricks > 13) {
-                showValidationMessage("Fout: Vul het aantal slagen in voor het biedende team (0-13).", true);
+            if (biddingTeamTricks === null || isNaN(biddingTeamTricks) || biddingTeamTricks < 0 || biddingTeamTricks > totalTricksInGame) {
+                showValidationMessage(`Fout: Vul het aantal slagen in voor het biedende team (0-${totalTricksInGame}).`, true);
                 return;
             }
-            const otherTeamTricks = 13 - biddingTeamTricks;
+            const otherTeamTricks = totalTricksInGame - biddingTeamTricks;
 
             const bid = playerBids[biddingPlayerIndex][roundIndex];
             const biddingPlayerScore = biddingTeamTricks >= bid ? bid : -bid;
@@ -562,20 +732,20 @@
             playerTricks[otherTeamPlayers[0]][roundIndex] = otherTeamTricks;
             playerTricks[otherTeamPlayers[1]][roundIndex] = otherTeamTricks;
 
-        } else {
+        } else { // Solo mode
             let currentRoundTricks = playerNames.map((_, pIndex) => {
               const tricksInput = document.getElementById(`tricks-${pIndex}-${roundIndex}`);
               return tricksInput.value.trim() !== '' ? parseInt(tricksInput.value, 10) : null;
             });
 
-            if (currentRoundTricks.some(t => t === null || t < 0 || t > 13)) {
-              showValidationMessage("Fout: Vul het aantal slagen in voor alle spelers (0-13).", true);
+            if (currentRoundTricks.some(t => t === null || t < 0 || t > totalTricksInGame)) {
+              showValidationMessage(`Fout: Vul het aantal slagen in voor alle spelers (0-${totalTricksInGame}).`, true);
               return;
             }
 
             const totalTricks = currentRoundTricks.reduce((sum, t) => sum + (t || 0), 0);
-            if (totalTricks !== 13) {
-                showValidationMessage("Fout: Het totaal aantal slagen moet 13 zijn.", true);
+            if (totalTricks !== totalTricksInGame) {
+                showValidationMessage(`Fout: Het totaal aantal slagen moet ${totalTricksInGame} zijn.`, true);
                 return;
             }
             
@@ -600,6 +770,14 @@
         let footerHtml = '';
         
         if (gameMode === 'solo') {
+            const colWidth = 100 / (playerCount + 1);
+
+            let colgroupHtml = '<colgroup>';
+            for (let i = 0; i < playerCount + 1; i++) {
+                colgroupHtml += `<col style="width:${colWidth}%">`;
+            }
+            colgroupHtml += '</colgroup>';
+
             let totalScoreRowHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
             let playerTotals = playerNames.map((_, playerIndex) => playerScores[playerIndex].reduce((sum, score) => sum + (score || 0), 0));
             playerTotals.forEach((total, playerIndex) => {
@@ -613,7 +791,7 @@
               totalScoreRowHtml += `<td class="text-lg font-bold text-center ${cornerClass} ${scoreClass}">${total}</td>`;
             });
             totalScoreRowHtml += '</tr>';
-            scoreTableFoot.innerHTML = totalScoreRowHtml;
+            scoreTableFoot.innerHTML = colgroupHtml + totalScoreRowHtml;
         } else if (gameMode === 'teams') {
             // Bereken de totale score voor elk team door de score van één speler te sommeren,
             // aangezien beide spelers van een team dezelfde score krijgen per ronde.
@@ -636,6 +814,9 @@
             scoreTableFoot.innerHTML = footerHtml;
         }
       };
+      
+      updatePlayerNameInputs();
+      updateDefaultBidSettings();
     });
   </script>
 </body>
