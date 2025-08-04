@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8, maximum-scale=1.0, user-scalable=no">
+  <title>Schoppenjagen (Batak) Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1f2937;
+    }
+
+    /* Stijlen voor de landschap/portretmodus */
+    @media only screen and (orientation: portrait) {
+      #main-content {
+        display: none;
+      }
+      #rotation-message {
+        display: flex;
+      }
+    }
+    @media only screen and (orientation: landscape) {
+      #main-content {
+        display: block;
+      }
+      #rotation-message {
+        display: none;
+      }
+    }
+
+    /* Algemene styling voor de Batak-calculator */
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+      width: 100%;
+      max-width: 900px;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: .5rem;
+      vertical-align: middle;
+      position: relative;
+      text-align: center;
+    }
+    th {
+      background-color: #1f2937;
+      color: #fff;
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+    tr:hover {
+      background-color: #e5e7eb;
+    }
+    td input {
+      font-size: .75rem;
+      text-align: center;
+    }
+    .input-container {
+      padding: .25rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .tricks-input {
+      width: 80%; /* Aangepaste breedte */
+    }
+    .action-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Score styling */
+    .score-win {
+      color: #16a34a;
+      font-weight: bold;
+    }
+    .score-lose {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    .score-zero {
+      color: #6b7280;
+    }
+    
+    /* CSS voor de rotatie-animatie */
+    #rotation-icon-svg {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 2rem;
+    }
+    #phone-vertical {
+        transform-origin: 50% 50%;
+        animation: rotate-phone 2s infinite;
+    }
+    #rotation-arrow {
+        transform-origin: 50% 50%;
+        animation: rotate-arrow 2s infinite;
+    }
+    @keyframes rotate-phone {
+        0%, 100% { transform: rotate(0deg); }
+        50% { transform: rotate(-90deg); }
+    }
+    @keyframes rotate-arrow {
+        0%, 100% { transform: rotate(0deg); opacity: 0; }
+        15%, 85% { opacity: 1; }
+        50% { transform: rotate(90deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
+
+  <!-- Bericht voor portretmodus -->
+  <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
+    <!-- Geanimeerde SVG van een draaiende telefoon -->
+    <svg id="rotation-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect id="phone-vertical" x="35" y="15" width="30" height="50" rx="5" stroke="#fff" stroke-width="2"/>
+      <path id="rotation-arrow" d="M75 50C75 41.7157 68.2843 35 60 35M75 50L69 55M75 50L69 45M25 50C25 58.2843 31.7157 65 40 65M25 50L31 45M25 50L31 55" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
+    <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
+  </div>
+
+  <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
+    <!-- Header en beschrijving -->
+    <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+      <div class="flex justify-between items-center">
+        <a href="./index.html" class="bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded-lg text-xs hover:bg-gray-300">
+          ← Terug naar menu
+        </a>
+        <h1 class="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1 flex-grow">Schoppenjagen (Batak) Calculator</h1>
+        <div class="w-20"></div> <!-- Placeholder om de titel te centreren -->
+      </div>
+      <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
+        Houd de score bij voor de Solo of Team Batak-variant.
+      </p>
+    </div>
+
+    <!-- Spelinstellingen -->
+    <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Speler namen (altijd 4):</label>
+          <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
+            <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
+            <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
+            <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Spelmodus:</label>
+          <select id="game-mode-select" class="block w-full mt-1 px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+            <option value="solo">Solo Batak</option>
+            <option value="teams">Team Batak</option>
+          </select>
+        </div>
+      </div>
+      <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Vul de namen in van alle 4 spelers om te beginnen.</div>
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+        <button id="start-game-btn" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Start Spel</button>
+        <button id="update-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Instellingen toepassen</button>
+        <button id="reset-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Reset Spel</button>
+      </div>
+    </div>
+
+    <!-- Scorebord -->
+    <div id="score-container" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4 hidden">
+      <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
+      <div id="validation-message-box" class="mt-2 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden"></div>
+      <div class="overflow-x-auto">
+        <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
+          <thead></thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <button id="add-round-btn" class="mt-4 w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm">Ronde toevoegen</button>
+    </div>
+  </div>
+
+  <!-- Aangepaste bied-popup -->
+  <div id="bid-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50">
+    <div class="bg-white p-6 rounded-2xl shadow-lg max-w-sm w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Bieding invoeren</h3>
+        <p class="text-sm text-gray-600 mb-4">
+            Voer het bod in voor <span id="modal-player-name" class="font-bold text-gray-800"></span> voor ronde <span id="modal-round-number" class="font-bold text-gray-800"></span>.
+        </p>
+        <div class="mb-4">
+            <label for="modal-bid-input" class="block text-sm font-medium text-gray-700 mb-1">Bod (0-13):</label>
+            <input type="number" id="modal-bid-input" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" min="0" max="13" placeholder="Bijv. 6">
+        </div>
+        <div class="flex justify-end space-x-2">
+            <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-300 transition-colors text-sm">Annuleren</button>
+            <button id="modal-submit-btn" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm">Bevestigen</button>
+        </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="w-full text-center py-4 text-gray-400 text-sm">Made by AE</footer>
+
+  <script>
+    // Wacht tot de DOM volledig geladen is
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Haal alle benodigde DOM-elementen op
+      const startGameBtn = document.getElementById('start-game-btn');
+      const updateGameBtn = document.getElementById('update-game-btn');
+      const scoreContainer = document.getElementById('score-container');
+      const scoreTableHead = document.querySelector('#score-table thead');
+      const scoreTableBody = document.querySelector('#score-table tbody');
+      const scoreTableFoot = document.querySelector('#score-table tfoot');
+      const addRoundBtn = document.getElementById('add-round-btn');
+      const resetGameBtn = document.getElementById('reset-game-btn');
+      const playerCountError = document.getElementById('player-count-error');
+      const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
+      const gameModeSelect = document.getElementById('game-mode-select');
+      const validationMessageBox = document.getElementById('validation-message-box');
+
+      // Modal elementen
+      const bidModal = document.getElementById('bid-modal');
+      const modalPlayerName = document.getElementById('modal-player-name');
+      const modalRoundNumber = document.getElementById('modal-round-number');
+      const modalBidInput = document.getElementById('modal-bid-input');
+      const modalCancelBtn = document.getElementById('modal-cancel-btn');
+      const modalSubmitBtn = document.getElementById('modal-submit-btn');
+
+      // Globale variabelen voor de spelstaat
+      let playerNames = [];
+      let playerBids = [];
+      let playerTricks = [];
+      let playerScores = [];
+      let numRounds = 0;
+      let gameMode = 'solo';
+
+      // Functie voor het starten van het spel
+      startGameBtn.addEventListener('click', () => {
+        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
+        if (activePlayerNames.length !== 4) {
+          playerCountError.classList.remove('hidden');
+          return;
+        }
+        
+        playerCountError.classList.add('hidden');
+        scoreContainer.classList.remove('hidden');
+        startGameBtn.classList.add('hidden');
+        updateGameBtn.classList.remove('hidden');
+        resetGameBtn.classList.remove('hidden');
+        updateGameBtn.classList.remove('w-full');
+        updateGameBtn.classList.add('sm:w-1/2');
+
+        playerNames = activePlayerNames;
+        gameMode = gameModeSelect.value;
+        numRounds = 1; // Start altijd met 1 ronde
+        playerBids = playerNames.map(() => Array(numRounds).fill(null));
+        playerTricks = playerNames.map(() => Array(numRounds).fill(null));
+        playerScores = playerNames.map(() => Array(numRounds).fill(null)); // null als score nog niet is berekend
+
+        renderTable();
+        scoreContainer.scrollIntoView({ behavior: 'smooth' });
+      });
+
+      // Functie voor het updaten van de spelinstellingen
+      updateGameBtn.addEventListener('click', () => {
+        const activePlayerNames = playerNameInputs.map(input => input.value.trim()).filter(name => name !== '');
+        if (activePlayerNames.length !== 4) {
+          playerCountError.classList.remove('hidden');
+          return;
+        }
+        
+        playerCountError.classList.add('hidden');
+        playerNames = activePlayerNames;
+        gameMode = gameModeSelect.value;
+        renderTable();
+      });
+
+      // Functie om een ronde toe te voegen
+      addRoundBtn.addEventListener('click', () => {
+        numRounds++;
+        playerBids.forEach(bids => bids.push(null));
+        playerTricks.forEach(tricks => tricks.push(null));
+        playerScores.forEach(scores => scores.push(null));
+        renderTable();
+      });
+
+      // Functie om het spel te resetten
+      resetGameBtn.addEventListener('click', () => {
+        playerNames = [];
+        playerBids = [];
+        playerTricks = [];
+        playerScores = [];
+        numRounds = 0;
+        gameMode = 'solo';
+
+        playerNameInputs.forEach(input => input.value = '');
+        gameModeSelect.value = 'solo';
+        scoreContainer.classList.add('hidden');
+        startGameBtn.classList.remove('hidden');
+        updateGameBtn.classList.add('hidden');
+        resetGameBtn.classList.add('hidden');
+        startGameBtn.classList.remove('sm:w-1/2');
+        startGameBtn.classList.add('w-full');
+        scoreTableHead.innerHTML = '';
+        scoreTableBody.innerHTML = '';
+        scoreTableFoot.innerHTML = '';
+      });
+      
+      // Functie om de inhoud van een input-veld te selecteren
+      window.selectOnFocus = (element) => {
+        element.select();
+      };
+
+      // Toon een validatiebericht
+      const showValidationMessage = (message, isError = true) => {
+          validationMessageBox.innerText = message;
+          validationMessageBox.classList.remove('hidden');
+          validationMessageBox.classList.add(isError ? 'bg-red-100' : 'bg-green-100', isError ? 'text-red-700' : 'text-green-700');
+          validationMessageBox.classList.remove(isError ? 'bg-green-100' : 'bg-red-100', isError ? 'text-green-700' : 'text-red-700');
+          setTimeout(() => {
+              validationMessageBox.classList.add('hidden');
+          }, 5000);
+      };
+
+      // Functie om de scoretabel te renderen
+      const renderTable = () => {
+        if (gameMode === 'solo') {
+            const displayPlayerOrder = [0, 1, 2, 3];
+            let tableHeadHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
+            displayPlayerOrder.forEach((playerIndex, i) => {
+                const isLastPlayer = i === displayPlayerOrder.length - 1;
+                const cornerClass = isLastPlayer ? 'rounded-tr-2xl' : '';
+                tableHeadHtml += `<th class="${cornerClass} text-sm">${playerNames[playerIndex]}</th>`;
+            });
+            tableHeadHtml += '</tr>';
+            scoreTableHead.innerHTML = tableHeadHtml;
+
+            let tableBodyHtml = '';
+            for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
+                const dealerName = playerNames[roundIndex % playerNames.length];
+                tableBodyHtml += `<tr><td class="font-bold text-sm flex flex-col items-center justify-center">`;
+                tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
+                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Deler: ${dealerName}</span>`;
+                tableBodyHtml += `</td>`;
+
+                const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
+                const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
+
+                displayPlayerOrder.forEach(playerIndex => {
+                    const bid = playerBids[playerIndex][roundIndex];
+                    const tricks = playerTricks[playerIndex][roundIndex];
+                    const score = playerScores[playerIndex][roundIndex];
+                    const isBiddingPlayer = playerIndex === biddingPlayerIndexInRound;
+
+                    tableBodyHtml += `<td>`;
+                    tableBodyHtml += `<div class="action-container" id="cell-${playerIndex}-${roundIndex}">`;
+                    
+                    if (isRoundLocked) {
+                        let scoreText = score;
+                        let scoreClass = 'score-zero';
+                        if (score > 0) {
+                            scoreClass = 'score-win';
+                            scoreText = `+${score}`;
+                        } else if (score < 0) {
+                            scoreClass = 'score-lose';
+                        } else if (score === null) {
+                            scoreText = '-';
+                        }
+                        tableBodyHtml += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                        tableBodyHtml += `<div class="text-xs font-medium text-gray-500">Bod: ${bid}, Slagen: ${tricks}</div>`;
+                    } else if (biddingPlayerIndexInRound === -1) {
+                        tableBodyHtml += `<button onclick="window.showBidModal(${playerIndex}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button>`;
+                    } else {
+                        const tricksInputId = `tricks-${playerIndex}-${roundIndex}`;
+                        if (isBiddingPlayer) {
+                            tableBodyHtml += `<div class="text-sm font-bold text-gray-700">Bod: ${bid}</div>`;
+                        } else {
+                            tableBodyHtml += `<div class="text-sm font-bold text-gray-700">Bod: -</div>`;
+                        }
+                        tableBodyHtml += `<div class="input-container space-x-1">`;
+                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input" placeholder="Slag" min="0" max="13">`;
+                        tableBodyHtml += `</div>`;
+                        if (isBiddingPlayer) {
+                            tableBodyHtml += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
+                        }
+                    }
+                    tableBodyHtml += `</div></td>`;
+                });
+                tableBodyHtml += '</tr>';
+            }
+            scoreTableBody.innerHTML = tableBodyHtml;
+
+        } else if (gameMode === 'teams') {
+            const playerDisplayOrder = [0, 2, 1, 3]; // Visuele volgorde in de tabel
+            let tableHeadHtml = '<tr><th class="rounded-tl-2xl">Ronde</th>';
+            playerDisplayOrder.forEach((pIndex, i) => {
+                const isLastPlayer = i === playerDisplayOrder.length - 1;
+                const cornerClass = isLastPlayer ? 'rounded-tr-2xl' : '';
+                tableHeadHtml += `<th class="${cornerClass} text-sm">${playerNames[pIndex]}</th>`;
+            });
+            tableHeadHtml += '</tr>';
+            scoreTableHead.innerHTML = tableHeadHtml;
+
+            let tableBodyHtml = '';
+            for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
+                const dealerName = playerNames[roundIndex % playerNames.length];
+                const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
+                const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
+
+                tableBodyHtml += `<tr><td class="font-bold text-sm flex flex-col items-center justify-center">`;
+                tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
+                tableBodyHtml += `<span class="text-xs font-normal text-gray-500 mt-1">Deler: ${dealerName}</span>`;
+                tableBodyHtml += `</td>`;
+
+                if (biddingPlayerIndexInRound === -1) {
+                    // Geen bod ingevoerd, toon de biedknoppen
+                    playerDisplayOrder.forEach(pIndex => {
+                        tableBodyHtml += `<td><button onclick="window.showBidModal(${pIndex}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
+                    });
+                } else {
+                    const biddingTeamPlayers = (biddingPlayerIndexInRound % 2) === 0 ? [0, 2] : [1, 3];
+                    const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
+                    const otherTeamTricks = playerTricks[otherTeamPlayers[0]][roundIndex];
+
+                    // Bepaal de HTML voor de biedende spelers
+                    const getBiddingTeamHtml = (pIndex) => {
+                        const score = playerScores[pIndex][roundIndex];
+                        const tricks = playerTricks[pIndex][roundIndex];
+                        let html = `<div class="action-container">`;
+                        if (isRoundLocked) {
+                            if (pIndex === biddingPlayerIndexInRound) {
+                                const scoreText = score !== null ? (score > 0 ? `+${score}` : (score < 0 ? score : '0')) : '-';
+                                const scoreClass = score > 0 ? 'score-win' : (score < 0 ? 'score-lose' : 'score-zero');
+                                html += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                                html += `<div class="text-xs font-medium text-gray-500">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}, Slagen: ${tricks}</div>`;
+                            } else {
+                                html += `<div class="text-lg font-bold text-gray-400">-</div>`;
+                                html += `<div class="text-xs font-medium text-gray-500">Bod: -</div>`;
+                            }
+                        } else {
+                            html += `<div class="text-sm font-bold text-gray-700">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}</div>`;
+                            if (pIndex === biddingPlayerIndexInRound) {
+                                html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24" placeholder="Slagen" min="0" max="13"></div>`;
+                                html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
+                            } else {
+                                html += `<div class="text-xs font-medium text-gray-500 mt-2">-</div>`;
+                            }
+                        }
+                        html += `</div>`;
+                        return html;
+                    };
+
+                    // Bepaal de HTML voor het andere team
+                    const getOtherTeamHtml = (tricks, isLocked) => {
+                        let html = `<div class="action-container">`;
+                        if (isLocked) {
+                            const scoreText = tricks !== null ? (tricks > 0 ? `+${tricks}` : '0') : '-';
+                            const scoreClass = tricks > 0 ? 'score-win' : 'score-zero';
+                            html += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                            html += `<div class="text-xs font-medium text-gray-500">Slagen: ${tricks}</div>`;
+                        } else {
+                            html += `<div class="text-sm font-bold text-gray-700">Slagen:</div><div class="input-container"><span id="other-team-tricks-${roundIndex}" class="text-sm text-gray-500 font-medium">Resterend</span></div>`;
+                        }
+                        html += `</div>`;
+                        return html;
+                    };
+
+                    if (biddingTeamPlayers[0] === 0) { // Team 1 heeft geboden
+                        tableBodyHtml += `<td>${getBiddingTeamHtml(0)}</td>`;
+                        tableBodyHtml += `<td>${getBiddingTeamHtml(2)}</td>`;
+                        tableBodyHtml += `<td colspan="2">${getOtherTeamHtml(otherTeamTricks, isRoundLocked)}</td>`;
+                    } else { // Team 2 heeft geboden
+                        tableBodyHtml += `<td colspan="2">${getOtherTeamHtml(otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += `<td>${getBiddingTeamHtml(1)}</td>`;
+                        tableBodyHtml += `<td>${getBiddingTeamHtml(3)}</td>`;
+                    }
+                }
+                tableBodyHtml += '</tr>';
+            }
+            scoreTableBody.innerHTML = tableBodyHtml;
+        }
+
+        renderTotalScores();
+      };
+
+      // Functie om de aangepaste bied-modal te tonen
+      window.showBidModal = (playerIndex, roundIndex) => {
+        modalPlayerName.innerText = playerNames[playerIndex];
+        modalRoundNumber.innerText = roundIndex + 1;
+        modalBidInput.value = '';
+        bidModal.dataset.playerIndex = playerIndex;
+        bidModal.dataset.roundIndex = roundIndex;
+        bidModal.classList.remove('hidden');
+        modalBidInput.focus();
+      };
+
+      // Functie om de aangepaste bied-modal te sluiten
+      const closeBidModal = () => {
+        bidModal.classList.add('hidden');
+      };
+
+      // Functie voor het afhandelen van de bieding via de modal
+      const submitBid = () => {
+        const bid = modalBidInput.value.trim();
+        const playerIndex = parseInt(bidModal.dataset.playerIndex, 10);
+        const roundIndex = parseInt(bidModal.dataset.roundIndex, 10);
+        
+        if (bid === '' || isNaN(bid)) {
+          showValidationMessage("Fout: Ongeldige bieding. Vul een getal in.", true);
+          return;
+        }
+
+        const bidValue = parseInt(bid, 10);
+        if (bidValue < 0 || bidValue > 13) {
+            showValidationMessage("Fout: Het bod moet tussen 0 en 13 liggen.", true);
+            return;
+        }
+        
+        playerBids[playerIndex][roundIndex] = bidValue;
+        renderTable();
+        closeBidModal();
+        showValidationMessage(`Bod van ${playerNames[playerIndex]} is vastgelegd.`, false);
+      };
+
+      modalCancelBtn.addEventListener('click', closeBidModal);
+      modalSubmitBtn.addEventListener('click', submitBid);
+
+      // Functie om de scores te berekenen en vast te leggen na een klik op 'Bereken Score'
+      window.handleCalculateScore = (biddingPlayerIndex, roundIndex) => {
+        if (gameMode === 'teams') {
+            const biddingTeamPlayers = (biddingPlayerIndex % 2) === 0 ? [0, 2] : [1, 3];
+            const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
+
+            const biddingTeamTricksInput = document.getElementById(`tricks-bidding-team-${roundIndex}`);
+            
+            const biddingTeamTricks = biddingTeamTricksInput.value.trim() !== '' ? parseInt(biddingTeamTricksInput.value, 10) : null;
+            
+            if (biddingTeamTricks === null || isNaN(biddingTeamTricks) || biddingTeamTricks < 0 || biddingTeamTricks > 13) {
+                showValidationMessage("Fout: Vul het aantal slagen in voor het biedende team (0-13).", true);
+                return;
+            }
+            const otherTeamTricks = 13 - biddingTeamTricks;
+
+            const bid = playerBids[biddingPlayerIndex][roundIndex];
+            const biddingPlayerScore = biddingTeamTricks >= bid ? bid : -bid;
+
+            // Update de scores en tricks voor het biedende team
+            playerScores[biddingTeamPlayers[0]][roundIndex] = biddingPlayerScore;
+            playerScores[biddingTeamPlayers[1]][roundIndex] = biddingPlayerScore;
+            playerTricks[biddingTeamPlayers[0]][roundIndex] = biddingTeamTricks;
+            playerTricks[biddingTeamPlayers[1]][roundIndex] = biddingTeamTricks;
+
+            // De score van het niet-biedende team is gelijk aan hun aantal slagen
+            playerScores[otherTeamPlayers[0]][roundIndex] = otherTeamTricks;
+            playerScores[otherTeamPlayers[1]][roundIndex] = otherTeamTricks;
+            playerTricks[otherTeamPlayers[0]][roundIndex] = otherTeamTricks;
+            playerTricks[otherTeamPlayers[1]][roundIndex] = otherTeamTricks;
+
+        } else {
+            let currentRoundTricks = playerNames.map((_, pIndex) => {
+              const tricksInput = document.getElementById(`tricks-${pIndex}-${roundIndex}`);
+              return tricksInput.value.trim() !== '' ? parseInt(tricksInput.value, 10) : null;
+            });
+
+            if (currentRoundTricks.some(t => t === null || t < 0 || t > 13)) {
+              showValidationMessage("Fout: Vul het aantal slagen in voor alle spelers (0-13).", true);
+              return;
+            }
+
+            const totalTricks = currentRoundTricks.reduce((sum, t) => sum + (t || 0), 0);
+            if (totalTricks !== 13) {
+                showValidationMessage("Fout: Het totaal aantal slagen moet 13 zijn.", true);
+                return;
+            }
+            
+            const bid = playerBids[biddingPlayerIndex][roundIndex];
+
+            playerNames.forEach((_, playerIndex) => {
+              if (playerIndex === biddingPlayerIndex) {
+                playerScores[playerIndex][roundIndex] = currentRoundTricks[playerIndex] >= bid ? bid : -bid;
+              } else {
+                playerScores[playerIndex][roundIndex] = currentRoundTricks[playerIndex];
+              }
+              playerTricks[playerIndex][roundIndex] = currentRoundTricks[playerIndex];
+            });
+        }
+        
+        renderTable();
+        showValidationMessage(`Ronde ${roundIndex + 1} is vastgelegd!`, false);
+      };
+
+      // Functie om de totale scores te renderen
+      const renderTotalScores = () => {
+        let footerHtml = '';
+        
+        if (gameMode === 'solo') {
+            let totalScoreRowHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
+            let playerTotals = playerNames.map((_, playerIndex) => playerScores[playerIndex].reduce((sum, score) => sum + (score || 0), 0));
+            playerTotals.forEach((total, playerIndex) => {
+              const cornerClass = playerIndex === playerTotals.length - 1 ? 'rounded-br-2xl' : '';
+              let scoreClass = 'score-zero';
+              if (total > 0) {
+                scoreClass = 'score-win';
+              } else if (total < 0) {
+                scoreClass = 'score-lose';
+              }
+              totalScoreRowHtml += `<td class="text-lg font-bold text-center ${cornerClass} ${scoreClass}">${total}</td>`;
+            });
+            totalScoreRowHtml += '</tr>';
+            scoreTableFoot.innerHTML = totalScoreRowHtml;
+        } else if (gameMode === 'teams') {
+            // Bereken de totale score voor elk team door de score van één speler te sommeren,
+            // aangezien beide spelers van een team dezelfde score krijgen per ronde.
+            const totalScoreTeam1 = playerScores[0].reduce((sum, score) => sum + (score || 0), 0);
+            const totalScoreTeam2 = playerScores[1].reduce((sum, score) => sum + (score || 0), 0);
+            
+            const getScoreClass = (total) => {
+                if (total > 0) return 'score-win';
+                if (total < 0) return 'score-lose';
+                return 'score-zero';
+            };
+
+            footerHtml += `
+              <tr class="bg-gray-200">
+                <td class="font-bold text-sm rounded-bl-2xl">Totaal</td>
+                <td colspan="2" class="text-lg font-bold text-center ${getScoreClass(totalScoreTeam1)}">${totalScoreTeam1}</td>
+                <td colspan="2" class="text-lg font-bold text-center rounded-br-2xl ${getScoreClass(totalScoreTeam2)}">${totalScoreTeam2}</td>
+              </tr>
+            `;
+            scoreTableFoot.innerHTML = footerHtml;
+        }
+      };
+    });
+  </script>
+</body>
+</html>
