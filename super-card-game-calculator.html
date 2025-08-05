@@ -160,6 +160,17 @@
         15%, 85% { opacity: 1; }
         50% { transform: rotate(90deg); }
     }
+    
+    /* Transition voor de uitleg-container */
+    #instruction-content {
+      transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+      overflow: hidden;
+      max-height: 1000px;
+      opacity: 1;
+    }
+    #instruction-content.collapsed {
+      max-height: 6rem; /* Toont een paar regels van de uitleg */
+    }
   </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
@@ -188,6 +199,58 @@
       <p class="text-center text-gray-600 text-sm sm:text-base mb-2">
         Voer de namen van de spelers en het aantal rondes in om de score bij te houden. Negatieve punten zijn goed, positieve punten zijn slecht!
       </p>
+    </div>
+    
+    <!-- Uitleg over de app (ingeklapt) -->
+    <div id="instructions-card" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Gebruiksaanwijzing</h2>
+        <button id="toggle-instructions-btn" class="bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded-lg text-sm hover:bg-gray-300">
+          Uitklappen
+        </button>
+      </div>
+      
+      <div id="instruction-content" class="collapsed">
+        <div class="prose max-w-none text-gray-700 text-sm">
+          <p>Deze gids helpt je om snel en eenvoudig de score bij te houden met de online calculator. Volg de onderstaande stappen om een nieuw spel te starten en rondes toe te voegen.</p>
+
+          <h3 class="text-lg font-bold mt-4 mb-2">Stap 1: Spelinstellingen instellen</h3>
+          <p>Om te beginnen met een nieuw spel, voer je eerst de namen van de spelers in.</p>
+          <ul>
+            <li><strong>Speler Namen:</strong> Gebruik de invoervelden om de namen van elke speler in te vullen.</li>
+            <li><strong>Teammodus:</strong> Als je met 4 spelers speelt, verschijnt er een optie om de **teammodus** in te schakelen. Vink dit vakje aan om scores bij te houden voor twee teams (Speler 1 & 2 tegen Speler 3 & 4).</li>
+            <li><strong>Starten:</strong> Als je klaar bent, klik je op de **'Start Spel'** knop. Het scorebord verschijnt en je kunt beginnen met de eerste ronde.</li>
+          </ul>
+
+          <h3 class="text-lg font-bold mt-4 mb-2">Stap 2: Een nieuwe ronde starten</h3>
+          <p>Het scorebord begint met de eerste ronde. Voordat je scores kunt invoeren, moet je de ronde-instellingen bepalen.</p>
+          <ul>
+            <li><strong>Gedraaide kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de gedraaide kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
+            <li><strong>Speler met "Kisterge":</strong> Selecteer de speler die "Kisterge" heeft uit het tweede dropdown-menu. Als dit niet van toepassing is, laat je de optie op 'Geen' staan.</li>
+          </ul>
+
+          <h3 class="text-lg font-bold mt-4 mb-2">Stap 3: Scores toevoegen</h3>
+          <p>Nu de ronde-instellingen zijn vastgelegd, kun je de score per speler toevoegen.</p>
+          <ul>
+            <li><strong>Speler met de trofee (🏆):</strong> Klik op de trofee-knop naast de naam van de speler die de ronde heeft gewonnen (de speler die 'uit' is gegaan).
+            </li>
+            <li><strong>Type out:</strong> Als een speler 'uit' is, verschijnen er twee knoppen eronder: **'Standaard'** en **'Joker'**. Klik op de juiste knop om het type out in te stellen. De actieve knop heeft een blauwe achtergrond.
+              <ul>
+                <li>**Standaard:** De speler krijgt **-100** punten.</li>
+                <li>**Joker:** De speler krijgt **-500** punten.</li>
+              </ul>
+            </li>
+            <li><strong>Restkaarten:</strong> Voor alle andere spelers (die niet 'uit' zijn gegaan), voer je het aantal restkaarten in in het invoerveld. De score onder de invoervelden wordt automatisch berekend. Een **groene** achtergrond betekent een negatieve score (goed!), terwijl een **rode** achtergrond een positieve score aangeeft (slecht!).
+            </li>
+          </ul>
+          <h3 class="text-lg font-bold mt-4 mb-2">Stap 4: Ronde afronden en verdergaan</h3>
+          <p>Zodra alle scores van een ronde zijn ingevoerd, kun je de volgende ronde starten.</p>
+          <ul>
+            <li><strong>Ronde toevoegen:</strong> De knop **'Ronde toevoegen'** onder de tabel is alleen actief (en heeft geen grijze, gedeactiveerde stijl) als er een 'out' speler is geselecteerd voor de huidige ronde.</li>
+            <li><strong>Volgende ronde:</strong> Zodra de knop actief is, klik erop om een nieuwe ronde toe te voegen aan het scorebord.</li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <!-- Spelinstellingen -->
@@ -225,7 +288,7 @@
         <button id="reset-game-btn" class="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm hidden">Reset Spel</button>
       </div>
     </div>
-
+    
     <!-- Scorebord -->
     <div id="score-container" class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4 hidden">
       <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
@@ -260,6 +323,8 @@
       const teamModeContainer = document.getElementById('team-mode-container');
       const teamModeCheckbox = document.getElementById('team-mode-checkbox');
       const playerNameInputs = Array.from({ length: 4 }, (_, i) => document.getElementById(`player-name-${i + 1}`));
+      const toggleInstructionsBtn = document.getElementById('toggle-instructions-btn');
+      const instructionContent = document.getElementById('instruction-content');
 
       // Globale variabelen voor de spelstaat
       let playerNames = [];
@@ -694,6 +759,12 @@
         });
       };
       
+      // Functie voor het in- en uitklappen van de uitleg
+      toggleInstructionsBtn.addEventListener('click', () => {
+        const isCollapsed = instructionContent.classList.toggle('collapsed');
+        toggleInstructionsBtn.textContent = isCollapsed ? 'Uitklappen' : 'Inklappen';
+      });
+
       // Roep de functie aan om de UI bij te werken bij het laden van de pagina
       updateTeamModeUI();
     });
