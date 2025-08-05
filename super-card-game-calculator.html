@@ -193,25 +193,30 @@
     <!-- Spelinstellingen -->
     <div class="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
       <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Speler namen (min. 2, max. 4):</label>
-          <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
-            <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
-            <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
-            <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 1:</label>
+          <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
         </div>
-        <div>
-          <div id="team-mode-container" class="mt-3 hidden">
-            <div class="flex items-center">
-              <input id="team-mode-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-              <label for="team-mode-checkbox" class="ml-2 block text-sm font-medium text-gray-700">Schakel teammodus in (2 tegen 2)</label>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">Team A: Speler 1 & 2 | Team B: Speler 3 & 4</p>
-          </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 2:</label>
+          <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
         </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 3:</label>
+          <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
+        </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 4:</label>
+          <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
+        </div>
+      </div>
+      <div id="team-mode-container" class="mt-3 bg-blue-50 p-4 rounded-lg border border-blue-200 hidden">
+        <div class="flex items-center">
+          <input id="team-mode-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+          <label for="team-mode-checkbox" class="ml-2 block text-sm font-bold text-blue-700">Schakel teammodus in (2 tegen 2)</label>
+        </div>
+        <p class="text-xs text-blue-500 mt-1">Team A: Speler 1 & 2 | Team B: Speler 3 & 4</p>
       </div>
       <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Het spel kan niet worden gestart met 1 speler. Zoek vrienden!</div>
       <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
