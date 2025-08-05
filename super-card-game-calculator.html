@@ -537,10 +537,10 @@
             tableBodyHtml += `<label class="block font-medium text-gray-700">Gedraaide kaart:</label>`;
             tableBodyHtml += `<select id="suit-${roundIndex}" onchange="window.handleRoundSettingsChange(${roundIndex})" class="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500">`;
             tableBodyHtml += `<option value="geen" ${'geen' === currentRound.suit ? 'selected' : ''}>Kies...</option>`;
-            tableBodyHtml += `<option value="klaver" ${'klaver' === currentRound.suit ? 'selected' : ''}>♣️ Klaver (x2, Kisterge -20)</option>`;
-            tableBodyHtml += `<option value="schoppen" ${'schoppen' === currentRound.suit ? 'selected' : ''}>♠️ Schoppen (x3, Kisterge -30)</option>`;
-            tableBodyHtml += `<option value="ruiten" ${'ruiten' === currentRound.suit ? 'selected' : ''}>♦️ Ruiten (x4, Kisterge -40)</option>`;
-            tableBodyHtml += `<option value="harten" ${'harten' === currentRound.suit ? 'selected' : ''}>♥️ Harten (x5, Kisterge -50)</option>`;
+            tableBodyHtml += `<option value="klaver" ${'klaver' === currentRound.suit ? 'selected' : ''}>♣️ Klaver (x2)</option>`;
+            tableBodyHtml += `<option value="schoppen" ${'schoppen' === currentRound.suit ? 'selected' : ''}>♠️ Schoppen (x3)</option>`;
+            tableBodyHtml += `<option value="ruiten" ${'ruiten' === currentRound.suit ? 'selected' : ''}>♦️ Ruiten (x4)</option>`;
+            tableBodyHtml += `<option value="harten" ${'harten' === currentRound.suit ? 'selected' : ''}>♥️ Harten (x5)</option>`;
             tableBodyHtml += `</select></div>`;
             
             tableBodyHtml += `<div><label class="block font-medium text-gray-700">Speler met "Kisterge":</label>`;
