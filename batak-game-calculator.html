@@ -180,12 +180,24 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Speler namen:</label>
-          <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
-            <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
-            <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
-            <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 1:</label>
+          <input type="text" id="player-name-1" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 1">
+        </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 2:</label>
+          <input type="text" id="player-name-2" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 2">
+        </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 3:</label>
+          <input type="text" id="player-name-3" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 3">
+        </div>
+        <div class="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Speler 4:</label>
+          <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
+        </div>
+      </div>
         </div>
       </div>
       <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Vul de namen in van alle 4 spelers om te beginnen.</div>
