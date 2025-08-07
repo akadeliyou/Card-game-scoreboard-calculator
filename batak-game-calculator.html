@@ -122,6 +122,12 @@
         15%, 85% { opacity: 1; }
         50% { transform: rotate(90deg); }
     }
+    /* Nieuwe CSS voor de markering van het invoerveld voor slagen */
+    .tricks-input-highlight {
+        background-color: #fffbe3; /* Lichtoranje achtergrond */
+        border: 2px solid #fbbf24; /* Oranje rand */
+        box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); /* Oranje gloed */
+    }
   </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
@@ -215,7 +221,7 @@
       <div class="overflow-x-auto">
         <table id="score-table" class="w-full text-left rounded-2xl shadow-md overflow-hidden">
           <thead></thead>
-          <tbody></thead>
+          <tbody></tbody>
           <tfoot></tfoot>
         </table>
       </div>
@@ -511,6 +517,9 @@
 
                 const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
                 const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
+                
+                // Variabele om te bepalen of de slaginvoeren gehighlight moeten worden
+                const isTricksInputActive = biddingPlayerIndexInRound !== -1 && !isRoundLocked;
 
                 displayPlayerOrder.forEach(playerIndex => {
                     const bid = playerBids[playerIndex][roundIndex];
@@ -538,12 +547,16 @@
                         tableBodyHtml += `<button onclick="window.showBidModal(${playerIndex}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button>`;
                     } else {
                         const tricksInputId = `tricks-${playerIndex}-${roundIndex}`;
+                        // Highlight het invoerveld als de slagen nog niet zijn ingevoerd
+                        // en de ronde is gestart
+                        const isTricksInputHighlighted = isTricksInputActive && playerTricks[playerIndex][roundIndex] === null;
+                        
                         if (isBiddingPlayer) {
                             tableBodyHtml += `<div class="text-sm font-bold text-gray-700">Bod: ${bid}</div>`;
                         }
                         // Toon altijd de input voor slagen, ongeacht of de speler heeft geboden.
                         tableBodyHtml += `<div class="input-container space-x-1">`;
-                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input" placeholder="Slag" min="0" max="${totalTricksInGame}">`;
+                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" oninput="this.classList.remove('tricks-input-highlight')" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slag" min="0" max="${totalTricksInGame}">`;
                         tableBodyHtml += `</div>`;
                         if (isBiddingPlayer) {
                             tableBodyHtml += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
@@ -584,6 +597,13 @@
 
                 const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
                 const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
+                const isTricksInputActive = biddingPlayerIndexInRound !== -1 && !isRoundLocked;
+                
+                const biddingTeamPlayers = (biddingPlayerIndexInRound % 2) === 0 ? [0, 2] : [1, 3];
+                const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
+                const biddingTeamTricks = playerTricks[biddingTeamPlayers[0]][roundIndex];
+                const otherTeamTricks = (biddingTeamTricks !== null) ? totalTricksInGame - biddingTeamTricks : null;
+                const biddingTeamBid = playerBids[biddingPlayerIndexInRound]?.[roundIndex];
 
                 if (biddingPlayerIndexInRound === -1) {
                     // Geen bod ingevoerd, toon de biedknoppen
@@ -592,62 +612,72 @@
                     tableBodyHtml += `<td><button onclick="window.showBidModal(1, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
                     tableBodyHtml += `<td><button onclick="window.showBidModal(3, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button></td>`;
                 } else {
-                    const biddingTeamPlayers = (biddingPlayerIndexInRound % 2) === 0 ? [0, 2] : [1, 3];
-                    const otherTeamPlayers = biddingTeamPlayers[0] === 0 ? [1, 3] : [0, 2];
-                    const otherTeamTricks = playerTricks[otherTeamPlayers[0]][roundIndex];
-
-                    // Bepaal de HTML voor de biedende spelers
-                    const getBiddingTeamHtml = (pIndex) => {
-                        const score = playerScores[pIndex][roundIndex];
-                        const tricks = playerTricks[pIndex][roundIndex];
-                        let html = `<div class="action-container">`;
+                    const renderBiddingTeam = (teamPlayers, bid) => {
+                        const biddingPlayerIndex = teamPlayers.find(p => p === biddingPlayerIndexInRound);
+                        const otherPlayerIndex = teamPlayers.find(p => p !== biddingPlayerIndexInRound);
+                        
+                        let html = '';
+                        // Eerste kolom voor de biedende speler
+                        html += `<td>`;
+                        html += `<div class="action-container">`;
                         if (isRoundLocked) {
-                            if (pIndex === biddingPlayerIndexInRound) {
-                                const scoreText = score !== null ? (score > 0 ? `+${score}` : (score < 0 ? score : '0')) : '-';
-                                const scoreClass = score > 0 ? 'score-win' : (score < 0 ? 'score-lose' : 'score-zero');
-                                html += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
-                                html += `<div class="text-xs font-medium text-gray-500">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}, Slagen: ${tricks}</div>`;
-                            } else {
-                                html += `<div class="text-lg font-bold text-gray-400">-</div>`;
+                            let scoreText = playerScores[biddingPlayerIndex][roundIndex];
+                            let scoreClass = 'score-zero';
+                            if (scoreText > 0) {
+                                scoreClass = 'score-win';
+                                scoreText = `+${scoreText}`;
+                            } else if (scoreText < 0) {
+                                scoreClass = 'score-lose';
+                            } else if (scoreText === null) {
+                                scoreText = '-';
                             }
+                            html += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                            html += `<div class="text-xs font-medium text-gray-500">Bod: ${bid}, Slagen: ${playerTricks[biddingPlayerIndex][roundIndex]}</div>`;
                         } else {
-                            if (pIndex === biddingPlayerIndexInRound) {
-                                html += `<div class="text-sm font-bold text-gray-700">Bod: ${playerBids[biddingPlayerIndexInRound][roundIndex]}</div>`;
-                                html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24" placeholder="Slagen" min="0" max="13"></div>`;
-                                html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
-                            } else {
-                                html += `<div class="text-sm font-bold text-gray-700">-</div>`;
-                            }
+                            // Biedende speler krijgt input
+                            const isTricksInputHighlighted = isTricksInputActive && playerTricks[biddingPlayerIndex][roundIndex] === null;
+                            html += `<div class="text-sm font-bold text-gray-700">Bod: ${bid}</div>`;
+                            html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" oninput="this.classList.remove('tricks-input-highlight')" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slagen" min="0" max="13"></div>`;
+                            html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
                         }
-                        html += `</div>`;
+                        html += `</div></td>`;
+
+                        // Tweede kolom voor de partner van de biedende speler
+                        html += `<td>`;
+                        html += `<div class="action-container">`;
+                        // Toon altijd een streepje voor de partner
+                        if (isRoundLocked) {
+                             html += `<div class="text-lg font-bold text-gray-400">-</div>`;
+                             html += `<div class="text-xs font-medium text-gray-500">-</div>`;
+                        } else {
+                            html += `<div class="text-sm font-bold text-gray-700">-</div>`;
+                        }
+                        html += `</div></td>`;
                         return html;
                     };
 
-                    // Bepaal de HTML voor het andere team
-                    const getOtherTeamHtml = (pIndex, tricks, isLocked) => {
-                        let html = `<div class="action-container">`;
+                    const renderOtherTeam = (teamPlayers, tricks, isLocked) => {
+                        let html = `<td colspan="2">`;
+                        html += `<div class="action-container">`;
                         if (isLocked) {
                             const scoreText = tricks !== null ? (tricks > 0 ? `+${tricks}` : '0') : '-';
                             const scoreClass = tricks > 0 ? 'score-win' : 'score-zero';
                             html += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
                             html += `<div class="text-xs font-medium text-gray-500">Slagen: ${tricks}</div>`;
                         } else {
-                            html += `<div class="text-sm font-bold text-gray-700">Slagen:</div><div class="input-container"><span id="other-team-tricks-${roundIndex}" class="text-sm text-gray-500 font-medium">Resterend</span></div>`;
+                            html += `<div class="text-sm font-bold text-gray-700">Slagen:</div><div class="input-container"><span class="text-sm text-gray-500 font-medium">${tricks !== null ? tricks : 'Resterend'}</span></div>`;
                         }
-                        html += `</div>`;
+                        html += `</div></td>`;
                         return html;
                     };
 
+
                     if (biddingTeamPlayers[0] === 0) { // Team 1 heeft geboden
-                        tableBodyHtml += `<td>${getBiddingTeamHtml(0)}</td>`;
-                        tableBodyHtml += `<td>${getBiddingTeamHtml(2)}</td>`;
-                        tableBodyHtml += `<td>${getOtherTeamHtml(1, otherTeamTricks, isRoundLocked)}</td>`;
-                        tableBodyHtml += `<td>${getOtherTeamHtml(3, otherTeamTricks, isRoundLocked)}</td>`;
+                        tableBodyHtml += renderBiddingTeam(biddingTeamPlayers, biddingTeamBid);
+                        tableBodyHtml += renderOtherTeam(otherTeamPlayers, otherTeamTricks, isRoundLocked);
                     } else { // Team 2 heeft geboden
-                        tableBodyHtml += `<td>${getOtherTeamHtml(0, otherTeamTricks, isRoundLocked)}</td>`;
-                        tableBodyHtml += `<td>${getOtherTeamHtml(2, otherTeamTricks, isRoundLocked)}</td>`;
-                        tableBodyHtml += `<td>${getBiddingTeamHtml(1)}</td>`;
-                        tableBodyHtml += `<td>${getBiddingTeamHtml(3)}</td>`;
+                        tableBodyHtml += renderOtherTeam(otherTeamPlayers, otherTeamTricks, isRoundLocked);
+                        tableBodyHtml += renderBiddingTeam(biddingTeamPlayers, biddingTeamBid);
                     }
                 }
                 tableBodyHtml += '</tr>';
