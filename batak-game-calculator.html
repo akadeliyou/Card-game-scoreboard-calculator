@@ -279,13 +279,34 @@
             <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('9')">9</button>
             <button class="col-span-1 bg-red-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-red-700" onclick="handleModalKeyboardInput('clear')">C</button>
             <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('0')">0</button>
-            <button class="col-span-1 bg-green-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-green-700" onclick="submitBid()">✓</button>
+            <button id="modal-submit-btn" class="col-span-1 bg-green-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-green-700" onclick="submitBid()">✓</button>
         </div>
         <!-- Nieuwe validatie melding in de modal -->
         <div id="modal-validation-message" class="mt-2 p-2 bg-red-100 text-red-700 font-bold rounded-lg hidden text-sm"></div>
         <div class="flex justify-end space-x-2 mt-4">
             <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-300 transition-colors text-sm" onclick="closeBidModal()">Annuleren</button>
         </div>
+    </div>
+  </div>
+  
+  <!-- Numeriek toetsenbord popup -->
+  <div id="keyboard-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-gray-900 bg-opacity-50">
+    <div class="bg-white p-4 rounded-2xl shadow-lg max-w-xs w-full mx-4">
+      <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Aantal slagen</h3>
+      <div class="grid grid-cols-3 gap-2">
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('1')">1</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('2')">2</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('3')">3</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('4')">4</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('5')">5</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('6')">6</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('7')">7</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('8')">8</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('9')">9</button>
+        <button class="col-span-1 bg-red-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-red-700" onclick="handleKeyboardInput('clear')">C</button>
+        <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleKeyboardInput('0')">0</button>
+        <button class="col-span-1 bg-green-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-green-700" onclick="handleKeyboardInput('enter')">✓</button>
+      </div>
     </div>
   </div>
   
@@ -826,11 +847,10 @@
         bidModal.dataset.playerIndex = playerIndex;
         bidModal.dataset.roundIndex = roundIndex;
         bidModal.classList.remove('hidden');
-        modalBidInput.focus();
       };
 
       // Functie om de aangepaste bied-modal te sluiten
-      function closeBidModal() {
+      window.closeBidModal = () => {
         bidModal.classList.add('hidden');
       }
 
