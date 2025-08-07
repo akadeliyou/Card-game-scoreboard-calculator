@@ -139,7 +139,7 @@
       <rect id="phone-vertical" x="35" y="15" width="30" height="50" rx="5" stroke="#fff" stroke-width="2"/>
       <path id="rotation-arrow" d="M75 50C75 41.7157 68.2843 35 60 35M75 50L69 55M75 50L69 45M25 50C25 58.2843 31.7157 65 40 65M25 50L31 45M25 50L31 55" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat! </h2>
     <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
   </div>
 
@@ -204,6 +204,14 @@
           <input type="text" id="player-name-4" class="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder="Speler 4">
         </div>
       </div>
+        </div>
+        <!-- Nieuwe instelling voor bonuspunten bij overbieden -->
+        <div>
+          <div class="flex items-center space-x-2">
+            <input id="bonus-tricks-checkbox" type="checkbox" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+            <label for="bonus-tricks-checkbox" class="block text-sm font-bold text-gray-700">Slagpunten gelijkhouden</label>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Als dit niet is aangevinkt, dan is het bod de maximale punten die je kunt krijgen, ook als je meer slagen pakt.</p>
         </div>
       </div>
       <div id="player-count-error" class="mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg hidden">Vul de namen in van alle 4 spelers om te beginnen.</div>
@@ -273,6 +281,7 @@
       const validationMessageBox = document.getElementById('validation-message-box');
       const minBidInput = document.getElementById('min-bid-input');
       const maxBidInput = document.getElementById('max-bid-input');
+      const bonusTricksCheckbox = document.getElementById('bonus-tricks-checkbox');
 
       // Modal elementen
       const bidModal = document.getElementById('bid-modal');
@@ -291,6 +300,7 @@
       let numRounds = 0;
       let gameMode = 'solo';
       let playerCount = 4;
+      let hasBonusTricks = false;
 
       // Event listener voor spelmodus en aantal spelers
       gameModeSelect.addEventListener('change', (e) => {
@@ -326,6 +336,11 @@
               e.target.value = totalTricksInGame;
               showValidationMessage(`Fout: Maximale bod kan niet hoger zijn dan ${totalTricksInGame}.`, true);
           }
+      });
+      
+      // Nieuwe event listener voor de bonuspunten checkbox
+      bonusTricksCheckbox.addEventListener('change', (e) => {
+        hasBonusTricks = e.target.checked;
       });
 
 
@@ -387,6 +402,7 @@
         playerBids = playerNames.map(() => Array(numRounds).fill(null));
         playerTricks = playerNames.map(() => Array(numRounds).fill(null));
         playerScores = playerNames.map(() => Array(numRounds).fill(null));
+        hasBonusTricks = bonusTricksCheckbox.checked;
 
         renderTable();
         scoreContainer.scrollIntoView({ behavior: 'smooth' });
@@ -405,6 +421,7 @@
         playerNames = activePlayerNames;
         gameMode = gameModeSelect.value;
         playerCount = playerNames.length;
+        hasBonusTricks = bonusTricksCheckbox.checked;
         renderTable();
       });
 
@@ -434,11 +451,13 @@
         numRounds = 0;
         gameMode = 'solo';
         playerCount = 4;
+        hasBonusTricks = false;
 
         playerNameInputs.forEach(input => input.value = '');
         gameModeSelect.value = 'solo';
         playerCountSelect.value = '4';
         playerCountSelect.disabled = false;
+        bonusTricksCheckbox.checked = false;
         playerNameInputs.forEach(input => input.classList.remove('hidden'));
         scoreContainer.classList.add('hidden');
         startGameBtn.classList.remove('hidden');
@@ -518,7 +537,6 @@
                 const biddingPlayerIndexInRound = playerBids.findIndex(bids => bids[roundIndex] !== null);
                 const isRoundLocked = playerScores.some(scores => scores[roundIndex] !== null);
                 
-                // Variabele om te bepalen of de slaginvoeren gehighlight moeten worden
                 const isTricksInputActive = biddingPlayerIndexInRound !== -1 && !isRoundLocked;
 
                 displayPlayerOrder.forEach(playerIndex => {
@@ -541,14 +559,18 @@
                         } else if (score === null) {
                             scoreText = '-';
                         }
-                        tableBodyHtml += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
-                        tableBodyHtml += `<div class="text-xs font-medium text-gray-500">Bod: ${bid}, Slagen: ${tricks}</div>`;
+                        // Toon 'Bod: Slagen:' alleen voor de biedende speler
+                        if (isBiddingPlayer) {
+                            tableBodyHtml += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                            tableBodyHtml += `<div class="text-xs font-medium text-gray-500">Bod: ${bid}, Slagen: ${tricks}</div>`;
+                        } else {
+                            tableBodyHtml += `<div class="text-lg font-bold ${scoreClass}">${scoreText}</div>`;
+                            tableBodyHtml += `<div class="text-xs font-medium text-gray-500">Slagen: ${tricks}</div>`;
+                        }
                     } else if (biddingPlayerIndexInRound === -1) {
                         tableBodyHtml += `<button onclick="window.showBidModal(${playerIndex}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bied</button>`;
                     } else {
                         const tricksInputId = `tricks-${playerIndex}-${roundIndex}`;
-                        // Highlight het invoerveld als de slagen nog niet zijn ingevoerd
-                        // en de ronde is gestart
                         const isTricksInputHighlighted = isTricksInputActive && playerTricks[playerIndex][roundIndex] === null;
                         
                         if (isBiddingPlayer) {
@@ -578,10 +600,11 @@
             tableHeadHtml += `<col style="width:${colWidth*2}%">`; // Team 2
             tableHeadHtml += '</colgroup>';
 
-            tableHeadHtml += '<tr><th colspan="1" class="rounded-tl-2xl">Ronde</th>';
+            tableHeadHtml += '<tr><th class="rounded-tl-2xl text-sm">Ronde</th>';
             tableHeadHtml += `<th colspan="2" class="text-sm">Team 1</th>`;
             tableHeadHtml += `<th colspan="2" class="rounded-tr-2xl text-sm">Team 2</th>`;
             tableHeadHtml += '</tr>';
+            tableHeadHtml += `<tr><th></th><th class="text-xs font-normal">${playerNames[0]}</th><th class="text-xs font-normal">${playerNames[2]}</th><th class="text-xs font-normal">${playerNames[1]}</th><th class="text-xs font-normal">${playerNames[3]}</th></tr>`;
             scoreTableHead.innerHTML = tableHeadHtml;
 
             let tableBodyHtml = '';
@@ -760,11 +783,18 @@
             const otherTeamTricks = totalTricksInGame - biddingTeamTricks;
 
             const bid = playerBids[biddingPlayerIndex][roundIndex];
-            const biddingPlayerScore = biddingTeamTricks >= bid ? bid : -bid;
+            
+            let biddingTeamScore;
+            if (hasBonusTricks) {
+              biddingTeamScore = biddingTeamTricks >= bid ? biddingTeamTricks : -bid;
+            } else {
+              biddingTeamScore = biddingTeamTricks >= bid ? bid : -bid;
+            }
+
 
             // Update de scores en tricks voor het biedende team
-            playerScores[biddingTeamPlayers[0]][roundIndex] = biddingPlayerScore;
-            playerScores[biddingTeamPlayers[1]][roundIndex] = biddingPlayerScore;
+            playerScores[biddingTeamPlayers[0]][roundIndex] = biddingTeamScore;
+            playerScores[biddingTeamPlayers[1]][roundIndex] = biddingTeamScore;
             playerTricks[biddingTeamPlayers[0]][roundIndex] = biddingTeamTricks;
             playerTricks[biddingTeamPlayers[1]][roundIndex] = biddingTeamTricks;
 
@@ -792,10 +822,16 @@
             }
             
             const bid = playerBids[biddingPlayerIndex][roundIndex];
-
+            
             playerNames.forEach((_, playerIndex) => {
               if (playerIndex === biddingPlayerIndex) {
-                playerScores[playerIndex][roundIndex] = currentRoundTricks[playerIndex] >= bid ? bid : -bid;
+                let score;
+                if (hasBonusTricks) {
+                  score = currentRoundTricks[playerIndex] >= bid ? currentRoundTricks[playerIndex] : -bid;
+                } else {
+                  score = currentRoundTricks[playerIndex] >= bid ? bid : -bid;
+                }
+                playerScores[playerIndex][roundIndex] = score;
               } else {
                 playerScores[playerIndex][roundIndex] = currentRoundTricks[playerIndex];
               }
