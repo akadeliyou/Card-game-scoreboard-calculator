@@ -128,6 +128,24 @@
         border: 2px solid #fbbf24; /* Oranje rand */
         box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); /* Oranje gloed */
     }
+    /* Stijl voor het numerieke toetsenbord */
+    .keyboard {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+        padding-top: 0.5rem;
+    }
+    .keyboard button {
+        padding: 0.5rem;
+        background-color: #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: background-color 0.2s;
+    }
+    .keyboard button:hover {
+        background-color: #d1d5db;
+    }
   </style>
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
@@ -246,13 +264,27 @@
         </p>
         <div class="mb-4">
             <label for="modal-bid-input" class="block text-sm font-medium text-gray-700 mb-1">Bod (0-13):</label>
-            <input type="number" id="modal-bid-input" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" min="0" max="13" placeholder="Bijv. 6">
+            <input type="text" id="modal-bid-input" class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" min="0" max="13" placeholder="Bijv. 6" readonly>
+        </div>
+        <!-- Numeriek toetsenbord in de popup -->
+        <div class="grid grid-cols-3 gap-2">
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('1')">1</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('2')">2</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('3')">3</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('4')">4</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('5')">5</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('6')">6</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('7')">7</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('8')">8</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('9')">9</button>
+            <button class="col-span-1 bg-red-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-red-700" onclick="handleModalKeyboardInput('clear')">C</button>
+            <button class="bg-gray-200 text-gray-800 font-bold rounded-lg p-4 text-2xl hover:bg-gray-300" onclick="handleModalKeyboardInput('0')">0</button>
+            <button class="col-span-1 bg-green-600 text-white font-bold rounded-lg p-4 text-2xl hover:bg-green-700" onclick="submitBid()">✓</button>
         </div>
         <!-- Nieuwe validatie melding in de modal -->
         <div id="modal-validation-message" class="mt-2 p-2 bg-red-100 text-red-700 font-bold rounded-lg hidden text-sm"></div>
-        <div class="flex justify-end space-x-2">
-            <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-300 transition-colors text-sm">Annuleren</button>
-            <button id="modal-submit-btn" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors text-sm">Bevestigen</button>
+        <div class="flex justify-end space-x-2 mt-4">
+            <button id="modal-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-sm hover:bg-gray-300 transition-colors text-sm" onclick="closeBidModal()">Annuleren</button>
         </div>
     </div>
   </div>
@@ -261,6 +293,9 @@
   <footer class="w-full text-center py-4 text-gray-400 text-sm">Made by AE</footer>
 
   <script>
+    // Globale variabele om de fout te voorkomen
+    let focusedInput = null;
+
     // Wacht tot de DOM volledig geladen is
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -282,6 +317,7 @@
       const minBidInput = document.getElementById('min-bid-input');
       const maxBidInput = document.getElementById('max-bid-input');
       const bonusTricksCheckbox = document.getElementById('bonus-tricks-checkbox');
+      const keyboardModal = document.getElementById('keyboard-modal');
 
       // Modal elementen
       const bidModal = document.getElementById('bid-modal');
@@ -344,7 +380,7 @@
       });
 
 
-      const updatePlayerNameInputs = () => {
+      function updatePlayerNameInputs() {
         if (gameMode === 'solo') {
             const newPlayerCount = parseInt(playerCountSelect.value, 10);
             playerNameInputs.forEach((input, index) => {
@@ -361,9 +397,9 @@
             playerNameInputs.forEach(input => input.classList.remove('hidden'));
             playerCount = 4;
         }
-      };
+      }
 
-      const updateDefaultBidSettings = () => {
+      function updateDefaultBidSettings() {
           if (playerCount === 3) {
               maxBidInput.value = 16;
               maxBidInput.max = 16; 
@@ -375,7 +411,7 @@
               minBidInput.value = 6;
               minBidInput.min = 0;
           }
-      };
+      }
 
       // Functie voor het starten van het spel
       startGameBtn.addEventListener('click', () => {
@@ -477,7 +513,7 @@
       };
 
       // Toon een validatiebericht (gebruikt voor meldingen buiten de modal)
-      const showValidationMessage = (message, isError = true) => {
+      function showValidationMessage(message, isError = true) {
           validationMessageBox.innerText = message;
           validationMessageBox.classList.remove('hidden');
           validationMessageBox.classList.add(isError ? 'bg-red-100' : 'bg-green-100', isError ? 'text-red-700' : 'text-green-700');
@@ -485,21 +521,21 @@
           setTimeout(() => {
               validationMessageBox.classList.add('hidden');
           }, 5000);
-      };
+      }
 
       // Toon een validatiebericht in de modal
-      const showModalValidationMessage = (message) => {
+      function showModalValidationMessage(message) {
         modalValidationMessage.innerText = message;
         modalValidationMessage.classList.remove('hidden');
-      };
+      }
       
       // Verberg de validatiebericht in de modal
-      const hideModalValidationMessage = () => {
+      function hideModalValidationMessage() {
         modalValidationMessage.classList.add('hidden');
-      };
+      }
 
       // Functie om de scoretabel te renderen
-      const renderTable = () => {
+      function renderTable() {
         const totalTricksInGame = playerCount === 3 ? 16 : 13;
         const minBid = parseInt(minBidInput.value, 10);
         const maxBid = parseInt(maxBidInput.value, 10);
@@ -527,7 +563,6 @@
             for (let roundIndex = 0; roundIndex < numRounds; roundIndex++) {
                 const dealerName = playerNames[roundIndex % playerCount];
                 
-                // BELANGRIJKE WIJZIGING: Gebruik een interne div voor Flexbox styling
                 tableBodyHtml += `<tr><td class="font-bold text-sm">`;
                 tableBodyHtml += `<div class="round-dealer-content">`;
                 tableBodyHtml += `<span>Ronde ${roundIndex + 1}</span>`;
@@ -578,7 +613,7 @@
                         }
                         // Toon altijd de input voor slagen, ongeacht of de speler heeft geboden.
                         tableBodyHtml += `<div class="input-container space-x-1">`;
-                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.selectOnFocus(this)" oninput="this.classList.remove('tricks-input-highlight')" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slag" min="0" max="${totalTricksInGame}">`;
+                        tableBodyHtml += `<input type="number" id="${tricksInputId}" onfocus="window.showKeyboardModal(this)" oninput="this.classList.remove('tricks-input-highlight')" class="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slag" min="0" max="${totalTricksInGame}">`;
                         tableBodyHtml += `</div>`;
                         if (isBiddingPlayer) {
                             tableBodyHtml += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
@@ -660,7 +695,7 @@
                             // Biedende speler krijgt input
                             const isTricksInputHighlighted = isTricksInputActive && playerTricks[biddingPlayerIndex][roundIndex] === null;
                             html += `<div class="text-sm font-bold text-gray-700">Bod: ${bid}</div>`;
-                            html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.selectOnFocus(this)" oninput="this.classList.remove('tricks-input-highlight')" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slagen" min="0" max="13"></div>`;
+                            html += `<div class="input-container"><input type="number" id="tricks-bidding-team-${roundIndex}" onfocus="window.showKeyboardModal(this)" oninput="this.classList.remove('tricks-input-highlight')" class="px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs w-24 ${isTricksInputHighlighted ? 'tricks-input-highlight' : ''}" placeholder="Slagen" min="0" max="13"></div>`;
                             html += `<button onclick="window.handleCalculateScore(${biddingPlayerIndexInRound}, ${roundIndex})" class="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>`;
                         }
                         html += `</div></td>`;
@@ -709,8 +744,71 @@
         }
 
         renderTotalScores();
-      };
+      }
 
+      function renderTotalScores() {
+        let footerHtml = '';
+        
+        if (gameMode === 'solo') {
+            const colWidth = 100 / (playerCount + 1);
+
+            let colgroupHtml = '<colgroup>';
+            for (let i = 0; i < playerCount + 1; i++) {
+                colgroupHtml += `<col style="width:${colWidth}%">`;
+            }
+            colgroupHtml += '</colgroup>';
+
+            let totalScoreRowHtml = '<tr><td class="font-bold text-sm">Totaal</td>';
+            let playerTotals = playerNames.map((_, playerIndex) => playerScores[playerIndex].reduce((sum, score) => sum + (score || 0), 0));
+            playerTotals.forEach((total, playerIndex) => {
+              const cornerClass = playerIndex === playerTotals.length - 1 ? 'rounded-br-2xl' : '';
+              let scoreClass = 'score-zero';
+              if (total > 0) {
+                scoreClass = 'score-win';
+              } else if (total < 0) {
+                scoreClass = 'score-lose';
+              }
+              totalScoreRowHtml += `<td class="text-lg font-bold text-center ${cornerClass} ${scoreClass}">${total}</td>`;
+            });
+            totalScoreRowHtml += '</tr>';
+            scoreTableFoot.innerHTML = colgroupHtml + totalScoreRowHtml;
+        } else if (gameMode === 'teams') {
+            // Bereken de totale score voor elk team door de score van één speler te sommeren,
+            // aangezien beide spelers van een team dezelfde score krijgen per ronde.
+            const totalScoreTeam1 = playerScores[0].reduce((sum, score) => sum + (score || 0), 0);
+            const totalScoreTeam2 = playerScores[1].reduce((sum, score) => sum + (score || 0), 0);
+            
+            const getScoreClass = (total) => {
+                if (total > 0) return 'score-win';
+                if (total < 0) return 'score-lose';
+                return 'score-zero';
+            };
+
+            footerHtml += `
+              <tr class="bg-gray-200">
+                <td class="font-bold text-sm rounded-bl-2xl">Totaal</td>
+                <td colspan="2" class="text-lg font-bold text-center ${getScoreClass(totalScoreTeam1)}">${totalScoreTeam1}</td>
+                <td colspan="2" class="text-lg font-bold text-center rounded-br-2xl ${getScoreClass(totalScoreTeam2)}">${totalScoreTeam2}</td>
+              </tr>
+            `;
+            scoreTableFoot.innerHTML = footerHtml;
+        }
+      }
+      
+      window.handleModalKeyboardInput = (value) => {
+        const inputElement = document.getElementById('modal-bid-input');
+        if (!inputElement) return;
+        
+        if (value === 'clear') {
+            inputElement.value = '';
+        } else {
+            // Voorkom dat er meer dan 2 cijfers worden ingevoerd
+            if (inputElement.value.length < 2) {
+                inputElement.value = (inputElement.value || '') + value;
+            }
+        }
+      };
+      
       // Functie om de aangepaste bied-modal te tonen
       window.showBidModal = (playerIndex, roundIndex) => {
         const minBid = parseInt(minBidInput.value, 10);
@@ -732,12 +830,12 @@
       };
 
       // Functie om de aangepaste bied-modal te sluiten
-      const closeBidModal = () => {
+      function closeBidModal() {
         bidModal.classList.add('hidden');
-      };
+      }
 
       // Functie voor het afhandelen van de bieding via de modal
-      const submitBid = () => {
+      function submitBid() {
         const bid = modalBidInput.value.trim();
         const playerIndex = parseInt(bidModal.dataset.playerIndex, 10);
         const roundIndex = parseInt(bidModal.dataset.roundIndex, 10);
@@ -759,7 +857,7 @@
         renderTable();
         closeBidModal();
         showValidationMessage(`Bod van ${playerNames[playerIndex]} is vastgelegd.`, false);
-      };
+      }
 
       modalCancelBtn.addEventListener('click', closeBidModal);
       modalSubmitBtn.addEventListener('click', submitBid);
@@ -844,7 +942,7 @@
       };
 
       // Functie om de totale scores te renderen
-      const renderTotalScores = () => {
+      function renderTotalScores() {
         let footerHtml = '';
         
         if (gameMode === 'solo') {
@@ -891,7 +989,7 @@
             `;
             scoreTableFoot.innerHTML = footerHtml;
         }
-      };
+      }
       
       updatePlayerNameInputs();
       updateDefaultBidSettings();
