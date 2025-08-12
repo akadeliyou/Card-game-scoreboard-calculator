@@ -1,0 +1,747 @@
+import React, { useState, useEffect } from 'react';
+
+// Main App component for the Super Score Calculator
+export default function App() {
+  // State variables to manage the game data and UI
+  const [playerNames, setPlayerNames] = useState(['', '', '', '']);
+  const [activePlayerNames, setActivePlayerNames] = useState([]);
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isTeamMode, setIsTeamMode] = useState(false);
+  const [playerCountError, setPlayerCountError] = useState(false);
+  const [roundData, setRoundData] = useState([]);
+  const [playerScores, setPlayerScores] = useState([]);
+
+  // Game configuration constants
+  const suitMultipliers = {
+    'klaver': 2,
+    'schoppen': 3,
+    'ruiten': 4,
+    'harten': 5
+  };
+  const kistergeSuitPoints = {
+    'klaver': -20,
+    'schoppen': -30,
+    'ruiten': -40,
+    'harten': -50
+  };
+  const suitDetails = {
+    'geen': { emoji: '♣️♠️♦️♥️', color: 'text-black', text: 'Geen' },
+    'klaver': { emoji: '♣️', color: 'text-black', text: 'Klaver' },
+    'schoppen': { emoji: '♠️', color: 'text-black', text: 'Schoppen' },
+    'ruiten': { emoji: '♦️', color: 'text-red', text: 'Ruiten' },
+    'harten': { emoji: '♥️', color: 'text-red', text: 'Harten' }
+  };
+  const outTypeDetails = {
+    'standaard': 'Standaard',
+    'joker': 'Joker'
+  };
+
+  // Function to get a player's team index (0 for Team A, 1 for Team B)
+  const getPlayerTeamIndex = (playerIndex) => playerIndex < 2 ? 0 : 1;
+
+  // Function to recalculate scores for a specific round
+  const recalculateRoundScores = (roundIndex) => {
+    if (!roundData[roundIndex] || !activePlayerNames.length) return;
+
+    const { suit, outPlayer, outType, kistergePlayer, leftoverCards } = roundData[roundIndex];
+
+    const newPlayerScores = [...playerScores];
+    const newRoundScores = activePlayerNames.map((_, playerIndex) => {
+      let score = 0;
+      const isCurrentOutPlayer = playerIndex === outPlayer;
+      const isPlayerOnOutTeam = isTeamMode && outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(outPlayer);
+
+      if (isCurrentOutPlayer) {
+        score = outType === 'joker' ? -500 : -100;
+      } else if (isPlayerOnOutTeam) {
+        score = 0;
+      } else {
+        const leftover = leftoverCards[playerIndex];
+        if (!isNaN(leftover) && leftover > 0 && suitMultipliers[suit]) {
+          score = leftover * suitMultipliers[suit];
+        }
+      }
+
+      if (playerIndex === kistergePlayer && kistergePlayer !== -1) {
+        score += kistergeSuitPoints[suit];
+      }
+      return score;
+    });
+
+    newPlayerScores.forEach((scores, playerIndex) => {
+      scores[roundIndex] = newRoundScores[playerIndex];
+    });
+
+    setPlayerScores(newPlayerScores);
+  };
+
+  // Event handler for player name input changes
+  const handlePlayerNameChange = (index, value) => {
+    const newPlayerNames = [...playerNames];
+    newPlayerNames[index] = value;
+    setPlayerNames(newPlayerNames);
+  };
+
+  // Event handler for starting the game
+  const handleStartGame = () => {
+    const activeNames = playerNames.filter(name => name.trim() !== '');
+    if (activeNames.length < 2) {
+      setPlayerCountError(true);
+      return;
+    }
+    setPlayerCountError(false);
+    setActivePlayerNames(activeNames);
+    setIsGameStarted(true);
+    setIsTeamMode(activeNames.length === 4 && isTeamMode);
+
+    // Initialize game state for the first round
+    const initialRoundData = [{
+      suit: 'geen',
+      outPlayer: null,
+      outType: 'standaard',
+      kistergePlayer: -1,
+      leftoverCards: Array(activeNames.length).fill(0)
+    }];
+    setRoundData(initialRoundData);
+    setPlayerScores(Array(activeNames.length).fill(null).map(() => [0]));
+  };
+
+  // Event handler for updating game settings
+  const handleUpdateGame = () => {
+    const activeNames = playerNames.filter(name => name.trim() !== '');
+    if (activeNames.length < 2) {
+      setPlayerCountError(true);
+      return;
+    }
+    setPlayerCountError(false);
+
+    const oldPlayerCount = activePlayerNames.length;
+    const newPlayerCount = activeNames.length;
+
+    if (newPlayerCount !== oldPlayerCount) {
+      // Re-initialize scores and round data if player count changes
+      setPlayerScores(Array(newPlayerCount).fill(null).map(() => Array(roundData.length).fill(0)));
+      setRoundData(prevData => prevData.map(round => ({
+        ...round,
+        leftoverCards: Array(newPlayerCount).fill(0)
+      })));
+    }
+    setActivePlayerNames(activeNames);
+    setIsTeamMode(activeNames.length === 4 && isTeamMode);
+  };
+
+  // Event handler for resetting the game
+  const handleResetGame = () => {
+    setPlayerNames(['', '', '', '']);
+    setActivePlayerNames([]);
+    setIsGameStarted(false);
+    setIsTeamMode(false);
+    setPlayerCountError(false);
+    setRoundData([]);
+    setPlayerScores([]);
+  };
+
+  // Event handler for adding a new round
+  const handleAddRound = () => {
+    const lastRound = roundData[roundData.length - 1];
+    if (lastRound.suit === 'geen' || lastRound.outPlayer === null) return;
+
+    const newRound = {
+      suit: 'geen',
+      outPlayer: null,
+      outType: 'standaard',
+      kistergePlayer: -1,
+      leftoverCards: Array(activePlayerNames.length).fill(0)
+    };
+
+    setRoundData(prevData => [...prevData, newRound]);
+    setPlayerScores(prevScores => prevScores.map(scores => [...scores, 0]));
+  };
+
+  // Event handler for round settings changes (suit, kisterge player)
+  const handleRoundSettingsChange = (roundIndex, field, value) => {
+    const newRoundData = [...roundData];
+    newRoundData[roundIndex] = { ...newRoundData[roundIndex], [field]: value };
+
+    // Reset some values if the suit is changed to 'geen'
+    if (field === 'suit' && value === 'geen') {
+      newRoundData[roundIndex] = {
+        ...newRoundData[roundIndex],
+        outPlayer: null,
+        kistergePlayer: -1,
+        leftoverCards: Array(activePlayerNames.length).fill(0)
+      };
+    }
+
+    setRoundData(newRoundData);
+  };
+
+  // Event handler for toggling the 'out' status of a player
+  const toggleOutStatus = (roundIndex, playerIndex) => {
+    const newRoundData = [...roundData];
+    const currentOutPlayer = newRoundData[roundIndex].outPlayer;
+    newRoundData[roundIndex].outPlayer = currentOutPlayer === playerIndex ? null : playerIndex;
+    setRoundData(newRoundData);
+  };
+
+  // Event handler for setting the 'out' type
+  const setOutType = (roundIndex, type) => {
+    const newRoundData = [...roundData];
+    newRoundData[roundIndex].outType = type;
+    setRoundData(newRoundData);
+  };
+
+  // Event handler for leftover cards input
+  const updateLeftoverCards = (roundIndex, playerIndex, value) => {
+    const newRoundData = [...roundData];
+    const newLeftoverCards = [...newRoundData[roundIndex].leftoverCards];
+    newLeftoverCards[playerIndex] = parseInt(value, 10) || 0;
+    newRoundData[roundIndex].leftoverCards = newLeftoverCards;
+    setRoundData(newRoundData);
+  };
+
+  // Check if the "Add Round" button should be enabled
+  const canAddRound = roundData.length > 0 && roundData[roundData.length - 1].suit !== 'geen' && roundData[roundData.length - 1].outPlayer !== null;
+  const isTeamModeEnabled = activePlayerNames.length === 4;
+
+  // Recalculate scores whenever roundData changes
+  useEffect(() => {
+    if (roundData.length > 0) {
+      roundData.forEach((_, index) => recalculateRoundScores(index));
+    }
+  }, [roundData, isTeamMode]); // Depend on roundData and teamMode
+
+  // Component for the instructions section
+  const Instructions = () => {
+    const [isCollapsed, setIsCollapsed] = useState(true);
+    return (
+      <div id="instructions-card" className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Gebruiksaanwijzing</h2>
+          <button
+            id="toggle-instructions-btn"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded-lg text-sm hover:bg-gray-300"
+          >
+            {isCollapsed ? 'Uitklappen' : 'Inklappen'}
+          </button>
+        </div>
+        <div id="instruction-content" className={`${isCollapsed ? 'collapsed' : ''}`}>
+          <div className="prose max-w-none text-gray-700 text-sm">
+            <p>Deze gids helpt je om snel en eenvoudig de score bij te houden met de online calculator. Volg de onderstaande stappen om een nieuw spel te starten en rondes toe te voegen.</p>
+            <h3 className="text-lg font-bold mt-4 mb-2">Stap 1: Spelinstellingen instellen</h3>
+            <p>Om te beginnen met een nieuw spel, voer je eerst de namen van de spelers in.</p>
+            <ul>
+              <li><strong>Speler Namen:</strong> Gebruik de invoervelden om de namen van elke speler in te vullen.</li>
+              <li><strong>Teammodus:</strong> Als je met 4 spelers speelt, verschijnt er een optie om de **teammodus** in te schakelen. Vink dit vakje aan om scores bij te houden voor twee teams (Speler 1 & 2 tegen Speler 3 & 4).</li>
+              <li><strong>Starten:</strong> Als je klaar bent, klik je op de **'Start Spel'** knop. Het scorebord verschijnt en je kunt beginnen met de eerste ronde.</li>
+            </ul>
+            <h3 className="text-lg font-bold mt-4 mb-2">Stap 2: Een nieuwe ronde starten</h3>
+            <p>Het scorebord begint met de eerste ronde. Voordat je scores kunt invoeren, moet je de ronde-instellingen bepalen.</p>
+            <ul>
+              <li><strong>Gedraaide kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de gedraaide kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
+              <li><strong>Speler met "Kisterge":</strong> Selecteer de speler die "Kisterge" heeft uit het tweede dropdown-menu. Als dit niet van toepassing is, laat je de optie op 'Geen' staan.</li>
+            </ul>
+            <h3 className="text-lg font-bold mt-4 mb-2">Stap 3: Scores toevoegen</h3>
+            <p>Nu de ronde-instellingen zijn vastgelegd, kun je de score per speler toevoegen.</p>
+            <ul>
+              <li><strong>Speler met de trofee (🏆):</strong> Klik op de trofee-knop naast de naam van de speler die de ronde heeft gewonnen (de speler die 'uit' is gegaan).</li>
+              <li><strong>Type out:</strong> Als een speler 'uit' is, verschijnen er twee knoppen eronder: **'Standaard'** en **'Joker'**. Klik op de juiste knop om het type out in te stellen. De actieve knop heeft een blauwe achtergrond.
+                <ul>
+                  <li>**Standaard:** De speler krijgt **-100** punten.</li>
+                  <li>**Joker:** De speler krijgt **-500** punten.</li>
+                </ul>
+              </li>
+              <li><strong>Restkaarten:</strong> Voor alle andere spelers (die niet 'uit' zijn gegaan), voer je het aantal restkaarten in in het invoerveld. De score onder de invoervelden wordt automatisch berekend. Een **groene** achtergrond betekent een negatieve score (goed!), terwijl een **rode** achtergrond een positieve score aangeeft (slecht!).</li>
+            </ul>
+            <h3 className="text-lg font-bold mt-4 mb-2">Stap 4: Ronde afronden en verdergaan</h3>
+            <p>Zodra alle scores van een ronde zijn ingevoerd, kun je de volgende ronde starten.</p>
+            <ul>
+              <li><strong>Ronde toevoegen:</strong> De knop **'Ronde toevoegen'** onder de tabel is alleen actief (en heeft geen grijze, gedeactiveerde stijl) als er een 'out' speler is geselecteerd voor de huidige ronde.</li>
+              <li><strong>Volgende ronde:</strong> Zodra de knop actief is, klik erop om een nieuwe ronde toe te voegen aan het scorebord.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Component for the rotation message
+  const RotationMessage = () => (
+    <div id="rotation-message" className="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
+      <svg id="rotation-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect id="phone-vertical" x="35" y="15" width="30" height="50" rx="5" stroke="#fff" strokeWidth="2"/>
+        <path id="rotation-arrow" d="M75 50C75 41.7157 68.2843 35 60 35M75 50L69 55M75 50L69 45M25 50C25 58.2843 31.7157 65 40 65M25 50L31 45M25 50L31 55" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
+      <p className="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
+    </div>
+  );
+
+  return (
+    <>
+      <style>
+        {`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        body {
+          font-family: 'Inter', sans-serif;
+          background-color: #1f2937;
+        }
+
+        /* Styles voor de landschap/portretmodus */
+        @media only screen and (orientation: portrait) {
+          #main-content {
+            display: none;
+          }
+          #rotation-message {
+            display: flex;
+          }
+        }
+        @media only screen and (orientation: landscape) {
+          #main-content {
+            display: block;
+          }
+          #rotation-message {
+            display: none;
+          }
+        }
+
+        /* Tabel styling */
+        table {
+          border-collapse: separate;
+          border-spacing: 0;
+          table-layout: fixed;
+          width: 100%;
+          max-width: 900px;
+        }
+        th, td {
+          border: 1px solid #e5e7eb;
+          padding: .5rem;
+          vertical-align: top;
+          position: relative;
+        }
+        th {
+          background-color: #1f2937;
+          color: #fff;
+          font-weight: 700;
+        }
+        tr:nth-child(even) {
+          background-color: #f9fafb;
+        }
+        tr:hover {
+          background-color: #e5e7eb;
+        }
+        td button, td input, td select {
+          font-size: .75rem;
+        }
+        .out-details button {
+          padding: .25rem .5rem;
+        }
+        .score-input-container {
+          padding: .5rem;
+        }
+        /* Nieuwe CSS voor de visuele markering van het eerste invoerveld */
+        .attention-pulse {
+          background-color: #fde68a; /* Geel-oranje achtergrond */
+          border: 1px solid #d97706;
+          border-radius: .5rem;
+          box-shadow: 0 0 8px rgba(251, 191, 36, .6);
+          animation: pulse 2s infinite ease-in-out;
+        }
+        @keyframes pulse {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 8px rgba(251, 191, 36, .6);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 16px rgba(251, 191, 36, .8);
+          }
+        }
+
+        .team-a-header {
+          background-color: #2563eb;
+        }
+        .team-b-header {
+          background-color: #dc2626;
+        }
+        .team-a-total-cell {
+          background-color: #93c5fd;
+        }
+        .team-b-total-cell {
+          background-color: #60a5fa;
+        }
+        .card-display {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          width: 32px;
+          height: 43px;
+          background-color: #fff;
+          border: 1px solid #000;
+          border-radius: 4px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 10px;
+          padding: 2px;
+          line-height: 1;
+          z-index: 10;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+        }
+        .card-value {
+          font-weight: 700;
+          font-size: 12px;
+        }
+        .card-suit {
+          font-size: 16px;
+        }
+        .text-red {
+          color: #ef4444;
+        }
+        .text-black {
+          color: #1f2937;
+        }
+        .winning-team-cell {
+          background-color: #d1fae5;
+        }
+        
+        /* Stijl voor de gedeactiveerde knop */
+        .disabled-btn {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        /* Nieuwe CSS voor de rotatie-animatie */
+        #rotation-icon-svg {
+          width: 120px;
+          height: 120px;
+          margin-bottom: 2rem;
+        }
+        #phone-vertical {
+          transform-origin: 50% 50%;
+          animation: rotate-phone 2s infinite;
+        }
+        #rotation-arrow {
+          transform-origin: 50% 50%;
+          animation: rotate-arrow 2s infinite;
+        }
+        @keyframes rotate-phone {
+          0%, 100% { transform: rotate(0deg); }
+          50% { transform: rotate(-90deg); }
+        }
+        @keyframes rotate-arrow {
+          0%, 100% { transform: rotate(0deg); opacity: 0; }
+          15%, 85% { opacity: 1; }
+          50% { transform: rotate(90deg); }
+        }
+        
+        /* Transition voor de uitleg-container */
+        #instruction-content {
+          transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+          overflow: hidden;
+          max-height: 1000px;
+          opacity: 1;
+        }
+        #instruction-content.collapsed {
+          max-height: 6rem; /* Toont een paar regels van de uitleg */
+        }
+        `}
+      </style>
+
+      <RotationMessage />
+
+      <div id="main-content" className="w-full flex flex-col items-center min-h-screen p-2">
+        {/* Header and description */}
+        <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+          <div className="flex justify-between items-center">
+            <a href="./index.html" className="bg-gray-200 text-gray-700 font-bold py-1 px-2 rounded-lg text-xs hover:bg-gray-300">
+              ← Terug naar menu
+            </a>
+            <h1 className="text-2xl sm:text-4xl font-bold text-center text-gray-800 mb-1 flex-grow">Supër Score Calculator</h1>
+            <div className="w-20"></div> {/* Placeholder to center the title */}
+          </div>
+          <p className="text-center text-gray-600 text-sm sm:text-base mb-2">
+            Voer de namen van de spelers en het aantal rondes in om de score bij te houden. Negatieve punten zijn goed, positieve punten zijn slecht!
+          </p>
+        </div>
+
+        {/* Instructions */}
+        <Instructions />
+
+        {/* Game settings */}
+        <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            {playerNames.map((name, index) => (
+              <div key={index} className="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Speler {index + 1}:</label>
+                <input
+                  type="text"
+                  id={`player-name-${index + 1}`}
+                  className="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  placeholder={`Speler ${index + 1}`}
+                  value={name}
+                  onChange={(e) => handlePlayerNameChange(index, e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div id="team-mode-container" className={`mt-3 bg-blue-50 p-4 rounded-lg border border-blue-200 ${isTeamModeEnabled ? '' : 'hidden'}`}>
+            <div className="flex items-center">
+              <input
+                id="team-mode-checkbox"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                checked={isTeamMode}
+                onChange={(e) => setIsTeamMode(e.target.checked)}
+                disabled={!isTeamModeEnabled}
+              />
+              <label htmlFor="team-mode-checkbox" className="ml-2 block text-sm font-bold text-blue-700">Schakel teammodus in (2 tegen 2)</label>
+            </div>
+            <p className="text-xs text-blue-500 mt-1">Team A: Speler 1 & 2 | Team B: Speler 3 & 4</p>
+          </div>
+
+          <div id="player-count-error" className={`mt-4 p-3 bg-red-100 text-red-700 font-bold rounded-lg ${playerCountError ? '' : 'hidden'}`}>Het spel kan niet worden gestart met 1 speler. Zoek vrienden!</div>
+
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+            {!isGameStarted ? (
+              <button
+                id="start-game-btn"
+                onClick={handleStartGame}
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm"
+              >
+                Start Spel
+              </button>
+            ) : (
+              <>
+                <button
+                  id="update-game-btn"
+                  onClick={handleUpdateGame}
+                  className="w-full sm:w-1/2 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm"
+                >
+                  Instellingen toepassen
+                </button>
+                <button
+                  id="reset-game-btn"
+                  onClick={handleResetGame}
+                  className="w-full sm:w-1/2 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors text-sm"
+                >
+                  Reset Spel
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Scoreboard */}
+        {isGameStarted && (
+          <div id="score-container" className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
+            <div className="overflow-x-auto">
+              <table id="score-table" className="w-full text-left rounded-2xl shadow-md overflow-hidden">
+                <thead>
+                  <tr>
+                    <th className="rounded-tl-2xl">Ronde</th>
+                    {activePlayerNames.map((name, playerIndex) => {
+                      const cornerClass = playerIndex === activePlayerNames.length - 1 ? 'rounded-tr-2xl' : '';
+                      const teamHeaderClass = isTeamMode && getPlayerTeamIndex(playerIndex) === 1 ? 'team-b-header' : 'team-a-header';
+                      return (
+                        <th key={playerIndex} className={`text-white text-sm ${cornerClass} ${teamHeaderClass}`}>{name}</th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {roundData.map((round, roundIndex) => {
+                    const isCurrentRound = roundIndex === roundData.length - 1;
+                    const isRoundPlayable = round.suit !== 'geen';
+                    const cardInfo = suitDetails[round.suit];
+                    const kistergePlayerName = activePlayerNames[round.kistergePlayer] || 'Geen';
+                    const highlightClass = isRoundPlayable ? '' : 'attention-pulse';
+
+                    return (
+                      <tr key={roundIndex}>
+                        <td className="font-bold text-sm">
+                          Ronde {roundIndex + 1}
+                          {isRoundPlayable && (
+                            <div className="card-display">
+                              <span className={`card-suit ${cardInfo.color}`}>{cardInfo.emoji}</span>
+                            </div>
+                          )}
+                          <div id={`round-settings-${roundIndex}`} className="mt-1 space-y-1 text-xs">
+                            <div className={`${isCurrentRound ? highlightClass + ' p-1 rounded-lg' : ''}`}>
+                              <label className="block font-medium text-gray-700">Gedraaide kaart:</label>
+                              {isCurrentRound ? (
+                                <select
+                                  id={`suit-${roundIndex}`}
+                                  onChange={(e) => handleRoundSettingsChange(roundIndex, 'suit', e.target.value)}
+                                  className="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                  value={round.suit}
+                                >
+                                  <option value="geen">Kies...</option>
+                                  <option value="klaver">♣️ Klaver (x2)</option>
+                                  <option value="schoppen">♠️ Schoppen (x3)</option>
+                                  <option value="ruiten">♦️ Ruiten (x4)</option>
+                                  <option value="harten">♥️ Harten (x5)</option>
+                                </select>
+                              ) : (
+                                <span className="block mt-0.5 w-full px-1.5 py-0.5 rounded-lg text-gray-800">{suitDetails[round.suit].text}</span>
+                              )}
+                            </div>
+                            <div>
+                              <label className="block font-medium text-gray-700">Speler met "Kisterge":</label>
+                              {isCurrentRound ? (
+                                <select
+                                  id={`kisterge-player-${roundIndex}`}
+                                  onChange={(e) => handleRoundSettingsChange(roundIndex, 'kistergePlayer', parseInt(e.target.value, 10))}
+                                  className="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                                  value={round.kistergePlayer}
+                                  disabled={!isRoundPlayable}
+                                >
+                                  <option value="-1">Geen</option>
+                                  {activePlayerNames.map((name, index) => (
+                                    <option key={index} value={index}>{name}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span className="block mt-0.5 w-full px-1.5 py-0.5 rounded-lg text-gray-800">{kistergePlayerName}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        {activePlayerNames.map((_, playerIndex) => {
+                          const score = playerScores[playerIndex]?.[roundIndex] ?? 0;
+                          const isOutPlayer = round.outPlayer === playerIndex;
+                          const isPlayerOnOutTeam = isTeamMode && round.outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(round.outPlayer);
+                          const outType = round.outType;
+                          const standardBtnClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                          const jokerBtnClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                          const buttonSymbol = isOutPlayer || isPlayerOnOutTeam ? '🏆' : (round.outPlayer !== null ? '❌' : '🏆');
+                          const buttonClass = isOutPlayer || isPlayerOnOutTeam ? 'bg-green-500' : (round.outPlayer !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
+                          const winningTeamCellClass = isPlayerOnOutTeam ? 'winning-team-cell' : '';
+
+                          return (
+                            <td key={playerIndex} className={winningTeamCellClass}>
+                              <div className="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">
+                                {isCurrentRound ? (
+                                  <button
+                                    id={`out-btn-${playerIndex}-${roundIndex}`}
+                                    onClick={() => toggleOutStatus(roundIndex, playerIndex)}
+                                    className={`w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2 ${buttonClass} ${!isRoundPlayable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={!isRoundPlayable}
+                                    tabIndex="-1"
+                                  >
+                                    {buttonSymbol}
+                                  </button>
+                                ) : (
+                                  <div className={`w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2 ${buttonClass}`}>
+                                    {buttonSymbol}
+                                  </div>
+                                )}
+
+                                {isCurrentRound ? (
+                                  <div id={`out-details-${playerIndex}-${roundIndex}`} className={`out-details mt-1 space-y-1 flex justify-center ${isOutPlayer ? '' : 'hidden'}`}>
+                                    <button
+                                      id={`standaard-btn-${roundIndex}`}
+                                      onClick={() => setOutType(roundIndex, 'standaard')}
+                                      className={`px-1 py-0.5 text-xs rounded-l-lg border border-r-0 font-bold transition-colors duration-200 ease-in-out ${standardBtnClass}`}
+                                      disabled={!isRoundPlayable}
+                                    >
+                                      Standaard
+                                    </button>
+                                    <button
+                                      id={`joker-btn-${roundIndex}`}
+                                      onClick={() => setOutType(roundIndex, 'joker')}
+                                      className={`px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerBtnClass}`}
+                                      disabled={!isRoundPlayable}
+                                    >
+                                      Joker
+                                    </button>
+                                  </div>
+                                ) : isOutPlayer && (
+                                  <div className="out-details mt-1 space-y-1 text-center font-bold text-xs">{outTypeDetails[outType]}</div>
+                                )}
+
+                                {isCurrentRound ? (
+                                  <div id={`leftover-details-${playerIndex}-${roundIndex}`} className={`leftover-details mt-1 space-y-1 ${isOutPlayer || isPlayerOnOutTeam ? 'hidden' : ''}`}>
+                                    <label className="block text-xs font-medium text-gray-700">Restkaarten:</label>
+                                    <input
+                                      type="tel"
+                                      id={`leftover-${playerIndex}-${roundIndex}`}
+                                      onInput={(e) => updateLeftoverCards(roundIndex, playerIndex, e.target.value)}
+                                      onFocus={(e) => e.target.select()}
+                                      className="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs"
+                                      value={round.leftoverCards[playerIndex] || ''}
+                                      min="0"
+                                      disabled={!isRoundPlayable || isOutPlayer || isPlayerOnOutTeam}
+                                    />
+                                  </div>
+                                ) : !isOutPlayer && !isPlayerOnOutTeam && (
+                                  <div className="leftover-details mt-1 space-y-1 text-center">
+                                    <span className="block text-xs font-medium text-gray-700">Restkaarten:</span>
+                                    <span className="block mt-0.5 w-full px-1.5 py-0.5 rounded-lg text-xs font-bold">{round.leftoverCards[playerIndex]}</span>
+                                  </div>
+                                )}
+
+                                <p id={`score-display-${playerIndex}-${roundIndex}`} className={`mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                  {score}
+                                </p>
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td className="font-bold text-sm bg-gray-100">Speler</td>
+                    {activePlayerNames.map((name, playerIndex) => (
+                      <td key={playerIndex} className="font-bold text-sm text-center bg-gray-100">{name}</td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="font-bold text-sm rounded-bl-2xl">Totaal</td>
+                    {activePlayerNames.map((name, playerIndex) => {
+                      const total = playerScores[playerIndex]?.reduce((sum, score) => sum + (score || 0), 0) ?? 0;
+                      const cornerClass = playerIndex === activePlayerNames.length - 1 ? 'rounded-br-2xl' : '';
+                      const teamHeaderClass = isTeamMode && getPlayerTeamIndex(playerIndex) === 1 ? 'team-b-header' : 'team-a-header';
+                      return (
+                        <td key={playerIndex} className={`text-lg font-bold text-center text-white ${teamHeaderClass} ${cornerClass}`}>{total}</td>
+                      );
+                    })}
+                  </tr>
+                  {isTeamMode && (
+                    <tr>
+                      <td className="font-bold text-sm">Team Totalen</td>
+                      <td colSpan="2" className="text-lg font-bold text-center team-a-total-cell">
+                        {(playerScores[0]?.reduce((a, b) => a + b, 0) ?? 0) + (playerScores[1]?.reduce((a, b) => a + b, 0) ?? 0)}
+                      </td>
+                      <td colSpan="2" className="text-lg font-bold text-center team-b-total-cell">
+                        {(playerScores[2]?.reduce((a, b) => a + b, 0) ?? 0) + (playerScores[3]?.reduce((a, b) => a + b, 0) ?? 0)}
+                      </td>
+                    </tr>
+                  )}
+                </tfoot>
+              </table>
+            </div>
+            <button
+              id="add-round-btn"
+              onClick={handleAddRound}
+              className={`mt-4 w-full py-2.5 px-4 bg-green-600 text-white font-bold rounded-lg shadow-md transition-colors text-sm ${canAddRound ? 'hover:bg-green-700' : 'disabled-btn'}`}
+              disabled={!canAddRound}
+            >
+              Ronde toevoegen
+            </button>
+          </div>
+        )}
+      </div>
+      <footer className="w-full text-center py-4 text-gray-400 text-sm">Made by AE</footer>
+    </>
+  );
+}
