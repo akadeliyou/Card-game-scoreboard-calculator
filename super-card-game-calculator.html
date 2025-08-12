@@ -121,20 +121,7 @@
         cursor: not-allowed;
     }
 
-    /* Nieuwe CSS voor de rotatie-animatie */
-    #rotation-icon-svg {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 2rem;
-    }
-    #phone-vertical {
-        transform-origin: 50% 50%;
-        animation: rotate-phone 2s infinite;
-    }
-    #rotation-arrow {
-        transform-origin: 50% 50%;
-        animation: rotate-arrow 2s infinite;
-    }
+
     @keyframes rotate-phone {
         0%, 100% { transform: rotate(0deg); }
         50% { transform: rotate(-90deg); }
@@ -159,16 +146,7 @@
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
 
-  <!-- Bericht voor portretmodus -->
-  <div id="rotation-message" class="w-full h-full min-h-screen flex flex-col items-center justify-center text-center text-gray-100 absolute inset-0">
-    <!-- Geanimeerde SVG van een draaiende telefoon -->
-    <svg id="rotation-icon-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect id="phone-vertical" x="35" y="15" width="30" height="50" rx="5" stroke="#fff" stroke-width="2"/>
-      <path id="rotation-arrow" d="M75 50C75 41.7157 68.2843 35 60 35M75 50L69 55M75 50L69 45M25 50C25 58.2843 31.7157 65 40 65M25 50L31 45M25 50L31 55" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Draai je apparaat!</h2>
-    <p class="text-base sm:text-lg text-gray-300">Deze website werkt alleen in landschapsmodus.</p>
-  </div>
+
 
   <div id="main-content" class="w-full flex flex-col items-center min-h-screen p-2">
     <!-- Header en beschrijving -->
