@@ -346,7 +346,8 @@
 
       // Check if the "Add Round" button should be enabled
       const canAddRound = roundData.length > 0 && roundData[roundData.length - 1].suit !== 'geen' && roundData[roundData.length - 1].outPlayer !== null;
-      const isTeamModeEnabled = activePlayerNames.length === 4;
+      // Vanaf nu wordt de isTeamModeEnabled hier berekend, maar de weergave van de teams is afhankelijk van de isTeamMode state
+      const isTeamModePossible = playerNames.filter(name => name.trim() !== '').length === 4;
 
       // Recalculate scores whenever roundData changes
       useEffect(() => {
@@ -434,22 +435,25 @@
             <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                {playerNames.map((name, index) => (
-                  <div key={index} className="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Speler {index + 1}:</label>
-                    <input
-                      type="text"
-                      id={`player-name-${index + 1}`}
-                      className="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                      placeholder={`Speler ${index + 1}`}
-                      value={name}
-                      onChange={(e) => handlePlayerNameChange(index, e.target.value)}
-                    />
-                  </div>
-                ))}
+                {playerNames.map((name, index) => {
+                  const teamColorClass = isTeamMode && isTeamModePossible ? (index < 2 ? 'border-blue-500' : 'border-red-500') : 'border-gray-200';
+                  return (
+                    <div key={index} className={`player-card bg-gray-50 p-4 rounded-lg border-2 shadow-sm ${teamColorClass}`}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Speler {index + 1}:</label>
+                      <input
+                        type="text"
+                        id={`player-name-${index + 1}`}
+                        className="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        placeholder={`Speler ${index + 1}`}
+                        value={name}
+                        onChange={(e) => handlePlayerNameChange(index, e.target.value)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
-              <div id="team-mode-container" className={`mt-3 bg-blue-50 p-4 rounded-lg border border-blue-200 ${isTeamModeEnabled ? '' : 'hidden'}`}>
+              <div id="team-mode-container" className={`mt-3 bg-blue-50 p-4 rounded-lg border border-blue-200 ${isTeamModePossible ? '' : 'hidden'}`}>
                 <div className="flex items-center">
                   <input
                     id="team-mode-checkbox"
@@ -457,7 +461,7 @@
                     className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     checked={isTeamMode}
                     onChange={(e) => setIsTeamMode(e.target.checked)}
-                    disabled={!isTeamModeEnabled}
+                    disabled={!isTeamModePossible}
                   />
                   <label htmlFor="team-mode-checkbox" className="ml-2 block text-sm font-bold text-blue-700">Schakel teammodus in (2 tegen 2)</label>
                 </div>
