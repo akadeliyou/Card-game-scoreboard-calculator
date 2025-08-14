@@ -123,30 +123,6 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
-
-    /* Nieuwe CSS voor de rotatie-animatie */
-    #rotation-icon-svg {
-      width: 120px;
-      height: 120px;
-      margin-bottom: 2rem;
-    }
-    #phone-vertical {
-      transform-origin: 50% 50%;
-      animation: rotate-phone 2s infinite;
-    }
-    #rotation-arrow {
-      transform-origin: 50% 50%;
-      animation: rotate-arrow 2s infinite;
-    }
-    @keyframes rotate-phone {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-90deg); }
-    }
-    @keyframes rotate-arrow {
-      0%, 100% { transform: rotate(0deg); opacity: 0; }
-      15%, 85% { opacity: 1; }
-      50% { transform: rotate(90deg); }
-    }
     
     /* Transition voor de uitleg-container */
     #instruction-content {
@@ -413,7 +389,7 @@
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 3: Scores toevoegen</h3>
                 <p>Nu de ronde-instellingen zijn vastgelegd, kun je de score per speler toevoegen.</p>
                 <ul>
-                  <li><strong>Speler met de trofee (�):</strong> Klik op de trofee-knop naast de naam van de speler die de ronde heeft gewonnen (de speler die 'uit' is gegaan).</li>
+                  <li><strong>Speler met de trofee (🏆):</strong> Klik op de trofee-knop naast de naam van de speler die de ronde heeft gewonnen (de speler die 'uit' is gegaan).</li>
                   <li><strong>Type out:</strong> Als een speler 'uit' is, verschijnen er twee knoppen eronder: **'Standaard'** en **'Joker'**. Klik op de juiste knop om het type out in te stellen. De actieve knop heeft een blauwe achtergrond.
                     <ul>
                       <li>**Standaard:** De speler krijgt **-100** punten.</li>
@@ -434,12 +410,9 @@
         );
       };
 
-
       return (
         <>
-          <RotationMessage />
-
-          <div id="main-content" className="w-full flex flex-col items-center min-h-screen p-2">
+          <div className="w-full flex flex-col items-center min-h-screen p-2">
             {/* Header and description */}
             <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
               <div className="flex justify-between items-center">
