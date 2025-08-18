@@ -187,7 +187,7 @@
       const recalculateRoundScores = (roundIndex) => {
         if (!roundData[roundIndex] || !activePlayerNames.length) return;
 
-        const { suit, outPlayer, outType, kistergePlayer, leftoverCards } = roundData[roundIndex];
+        const { suit, outPlayer, outType, kistergePlayer, leftoverCards, isNobodyOut } = roundData[roundIndex];
 
         const newPlayerScores = [...playerScores];
         const newRoundScores = activePlayerNames.map((_, playerIndex) => {
@@ -195,7 +195,13 @@
           const isCurrentOutPlayer = playerIndex === outPlayer;
           const isPlayerOnOutTeam = isTeamMode && outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(outPlayer);
 
-          if (isCurrentOutPlayer) {
+          if (isNobodyOut) {
+            // New logic for 'nobody won' scenario
+            const leftover = leftoverCards[playerIndex];
+            if (!isNaN(leftover) && leftover > 0 && suitMultipliers[suit]) {
+              score = leftover * suitMultipliers[suit];
+            }
+          } else if (isCurrentOutPlayer) {
             score = outType === 'joker' ? -500 : -100;
           } else if (isPlayerOnOutTeam) {
             score = 0;
@@ -238,13 +244,14 @@
         setIsGameStarted(true);
         setIsTeamMode(activeNames.length === 4 && isTeamMode);
 
-        // Initialize game state for the first round
+        // Initialize game state for the first round, including 'isNobodyOut'
         const initialRoundData = [{
           suit: 'geen',
           outPlayer: null,
           outType: 'standaard',
           kistergePlayer: -1,
-          leftoverCards: Array(activeNames.length).fill(0)
+          leftoverCards: Array(activeNames.length).fill(0),
+          isNobodyOut: false,
         }];
         setRoundData(initialRoundData);
         setPlayerScores(Array(activeNames.length).fill(null).map(() => [0]));
@@ -288,14 +295,16 @@
       // Event handler for adding a new round
       const handleAddRound = () => {
         const lastRound = roundData[roundData.length - 1];
-        if (lastRound.suit === 'geen' || lastRound.outPlayer === null) return;
+        // Check if the round is finished before adding a new one
+        if (lastRound.suit === 'geen' || (lastRound.outPlayer === null && lastRound.isNobodyOut === false)) return;
 
         const newRound = {
           suit: 'geen',
           outPlayer: null,
           outType: 'standaard',
           kistergePlayer: -1,
-          leftoverCards: Array(activePlayerNames.length).fill(0)
+          leftoverCards: Array(activePlayerNames.length).fill(0),
+          isNobodyOut: false,
         };
 
         setRoundData(prevData => [...prevData, newRound]);
@@ -313,7 +322,8 @@
             ...newRoundData[roundIndex],
             outPlayer: null,
             kistergePlayer: -1,
-            leftoverCards: Array(activePlayerNames.length).fill(0)
+            leftoverCards: Array(activePlayerNames.length).fill(0),
+            isNobodyOut: false, // Reset the nobody out flag
           };
         }
 
@@ -325,6 +335,26 @@
         const newRoundData = [...roundData];
         const currentOutPlayer = newRoundData[roundIndex].outPlayer;
         newRoundData[roundIndex].outPlayer = currentOutPlayer === playerIndex ? null : playerIndex;
+        newRoundData[roundIndex].isNobodyOut = false; // Reset the nobody out flag when someone wins
+        setRoundData(newRoundData);
+      };
+
+      // Function to handle the 'nobody out' button
+      const toggleNobodyOut = (roundIndex) => {
+        const newRoundData = [...roundData];
+        const currentRound = newRoundData[roundIndex];
+        currentRound.isNobodyOut = true;
+        currentRound.outPlayer = null; // Ensure no out player is selected
+        currentRound.outType = 'standaard'; // Reset out type
+        setRoundData(newRoundData);
+      };
+
+      // New function to undo the 'nobody out' action
+      const undoNobodyOut = (roundIndex) => {
+        const newRoundData = [...roundData];
+        const currentRound = newRoundData[roundIndex];
+        currentRound.isNobodyOut = false;
+        currentRound.leftoverCards = Array(activePlayerNames.length).fill(0);
         setRoundData(newRoundData);
       };
 
@@ -345,7 +375,8 @@
       };
 
       // Check if the "Add Round" button should be enabled
-      const canAddRound = roundData.length > 0 && roundData[roundData.length - 1].suit !== 'geen' && roundData[roundData.length - 1].outPlayer !== null;
+      const lastRound = roundData[roundData.length - 1];
+      const canAddRound = lastRound && lastRound.suit !== 'geen' && (lastRound.outPlayer !== null || lastRound.isNobodyOut === true);
       // Vanaf nu wordt de isTeamModeEnabled hier berekend, maar de weergave van de teams is afhankelijk van de isTeamMode state
       const isTeamModePossible = playerNames.filter(name => name.trim() !== '').length === 4;
 
@@ -397,12 +428,13 @@
                       <li>**Joker:** De speler krijgt **-500** punten.</li>
                     </ul>
                   </li>
-                  <li><strong>Restkaarten:</strong> Voor alle andere spelers (die niet 'uit' zijn gegaan), voer je het aantal restkaarten in in het invoerveld. De score onder de invoervelden wordt automatisch berekend. Een **groene** achtergrond betekent een negatieve score (goed!), terwijl een **rode** achtergrond een positieve score aangeeft (slecht!).</li>
+                  <li><strong>Niemand Uit:</strong> Als niemand de ronde heeft gewonnen, klik je op de knop **'Niemand Uit'**. De score wordt dan voor elke speler berekend op basis van hun restkaarten.</li>
+                  <li><strong>Restkaarten:</strong> Voor alle spelers die niet 'uit' zijn gegaan, voer je het aantal restkaarten in in het invoerveld. De score onder de invoervelden wordt automatisch berekend. Een **groene** achtergrond betekent een negatieve score (goed!), terwijl een **rode** achtergrond een positieve score aangeeft (slecht!).</li>
                 </ul>
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 4: Ronde afronden en verdergaan</h3>
                 <p>Zodra alle scores van een ronde zijn ingevoerd, kun je de volgende ronde starten.</p>
                 <ul>
-                  <li><strong>Ronde toevoegen:</strong> De knop **'Ronde toevoegen'** onder de tabel is alleen actief (en heeft geen grijze, gedeactiveerde stijl) als er een 'out' speler is geselecteerd voor de huidige ronde.</li>
+                  <li><strong>Ronde toevoegen:</strong> De knop **'Ronde toevoegen'** onder de tabel is alleen actief als er een 'out' speler is geselecteerd, of als de optie 'Niemand uit' is ingeschakeld.</li>
                   <li><strong>Volgende ronde:</strong> Zodra de knop actief is, klik erop om een nieuwe ronde toe te voegen aan het scorebord.</li>
                 </ul>
               </div>
@@ -529,8 +561,8 @@
                         const selectHighlightClass = isCurrentRound && !isRoundPlayable ? 'attention-pulse' : '';
                         
                         // New conditional class for the trophy buttons
-                        const buttonPulseClass = isCurrentRound && isRoundPlayable && round.outPlayer === null ? 'attention-pulse' : '';
-                        const hasOutPlayer = round.outPlayer !== null; // Toon restkaarten pas als er een winnaar is
+                        const buttonPulseClass = isCurrentRound && isRoundPlayable && round.outPlayer === null && round.isNobodyOut === false ? 'attention-pulse' : '';
+                        const hasOutPlayer = round.outPlayer !== null || round.isNobodyOut;
 
                         return (
                           <tr key={roundIndex}>
@@ -580,6 +612,24 @@
                                     <span className="block mt-0.5 w-full px-1.5 py-0.5 rounded-lg text-gray-800">{kistergePlayerName}</span>
                                   )}
                                 </div>
+                                {isCurrentRound && isRoundPlayable && (round.outPlayer === null) && (
+                                  <div className="mt-2 text-center flex flex-row space-x-2">
+                                    <button
+                                      id={`nobody-out-btn-${roundIndex}`}
+                                      onClick={() => toggleNobodyOut(roundIndex)}
+                                      className={`py-1 px-2 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 ${round.isNobodyOut ? 'hidden' : ''}`}
+                                    >
+                                      Niemand uit
+                                    </button>
+                                    <button
+                                      id={`undo-nobody-out-btn-${roundIndex}`}
+                                      onClick={() => undoNobodyOut(roundIndex)}
+                                      className={`py-1 px-2 rounded-lg text-xs font-bold text-white bg-gray-500 hover:bg-gray-600 ${!round.isNobodyOut ? 'hidden' : ''}`}
+                                    >
+                                      Ongedaan maken
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </td>
 
@@ -597,23 +647,23 @@
                               return (
                                 <td key={playerIndex} className={winningTeamCellClass}>
                                   <div className="score-input-container p-1 rounded-lg bg-gray-50 border-gray-200 border">
-                                    {isCurrentRound ? (
+                                    {isCurrentRound && !round.isNobodyOut ? (
                                       <button
                                         id={`out-btn-${playerIndex}-${roundIndex}`}
                                         onClick={() => toggleOutStatus(roundIndex, playerIndex)}
                                         className={`w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2 ${buttonClass} ${!isRoundPlayable ? 'opacity-50 cursor-not-allowed' : ''} ${buttonPulseClass}`}
-                                        disabled={!isRoundPlayable}
+                                        disabled={!isRoundPlayable || round.isNobodyOut}
                                         tabIndex="-1"
                                       >
                                         {buttonSymbol}
                                       </button>
-                                    ) : (
+                                    ) : !round.isNobodyOut && (
                                       <div className={`w-full py-1.5 px-2 rounded-lg font-bold transition-colors mb-1 text-white flex items-center justify-center space-x-2 ${buttonClass}`}>
                                         {buttonSymbol}
                                       </div>
                                     )}
 
-                                    {isCurrentRound && hasOutPlayer ? (
+                                    {isCurrentRound && round.outPlayer !== null ? (
                                       <div id={`out-details-${playerIndex}-${roundIndex}`} className={`out-details mt-1 space-y-1 flex justify-center ${isOutPlayer ? '' : 'hidden'}`}>
                                         <button
                                           id={`standaard-btn-${roundIndex}`}
@@ -632,12 +682,12 @@
                                           Joker
                                         </button>
                                       </div>
-                                    ) : isCurrentRound && isOutPlayer && !hasOutPlayer ? null : isOutPlayer && (
+                                    ) : isCurrentRound && isOutPlayer && !round.isNobodyOut ? null : isOutPlayer && (
                                       <div className="out-details mt-1 space-y-1 text-center font-bold text-xs">{outTypeDetails[outType]}</div>
                                     )}
 
                                     {isCurrentRound && hasOutPlayer ? (
-                                      <div id={`leftover-details-${playerIndex}-${roundIndex}`} className={`leftover-details mt-1 space-y-1 ${isOutPlayer || isPlayerOnOutTeam ? 'hidden' : ''}`}>
+                                      <div id={`leftover-details-${playerIndex}-${roundIndex}`} className={`leftover-details mt-1 space-y-1 ${(isOutPlayer && !round.isNobodyOut) || isPlayerOnOutTeam ? 'hidden' : ''}`}>
                                         <label className="block text-xs font-medium text-gray-700">Restkaarten:</label>
                                         <input
                                           type="tel"
@@ -647,16 +697,16 @@
                                           className="mt-0.5 block w-full px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs"
                                           value={round.leftoverCards[playerIndex] || ''}
                                           min="0"
-                                          disabled={!isRoundPlayable || isOutPlayer || isPlayerOnOutTeam}
+                                          disabled={!isRoundPlayable || (round.outPlayer !== null && playerIndex === round.outPlayer) || (isPlayerOnOutTeam && !round.isNobodyOut)}
                                         />
                                       </div>
-                                    ) : isCurrentRound && !hasOutPlayer ? null : !isOutPlayer && !isPlayerOnOutTeam && (
+                                    ) : isCurrentRound && !hasOutPlayer ? null : (!isOutPlayer && !isPlayerOnOutTeam && !round.isNobodyOut) ? (
                                       <div className="leftover-details mt-1 space-y-1 text-center">
                                         <span className="block text-xs font-medium text-gray-700">Restkaarten:</span>
                                         <span className="block mt-0.5 w-full px-1.5 py-0.5 rounded-lg text-xs font-bold">{round.leftoverCards[playerIndex]}</span>
                                       </div>
-                                    )}
-
+                                    ) : null}
+                                    
                                     {hasOutPlayer && <p id={`score-display-${playerIndex}-${roundIndex}`} className={`mt-1 text-sm font-bold text-center p-1 rounded-lg ${score < 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                       {score}
                                     </p>}
