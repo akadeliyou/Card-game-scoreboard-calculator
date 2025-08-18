@@ -177,8 +177,11 @@
       };
       const outTypeDetails = {
         'standaard': 'Standaard',
-        'joker': 'Joker'
+        'joker': 'Joker',
+        'chift': 'Chift met joker'
       };
+
+      const chiftMultiplier = 10;
 
       // Function to get a player's team index (0 for Team A, 1 for Team B)
       const getPlayerTeamIndex = (playerIndex) => playerIndex < 2 ? 0 : 1;
@@ -196,19 +199,31 @@
           const isPlayerOnOutTeam = isTeamMode && outPlayer !== null && getPlayerTeamIndex(playerIndex) === getPlayerTeamIndex(outPlayer);
 
           if (isNobodyOut) {
-            // New logic for 'nobody won' scenario
+            // Logic for 'nobody won' scenario
             const leftover = leftoverCards[playerIndex];
             if (!isNaN(leftover) && leftover > 0 && suitMultipliers[suit]) {
               score = leftover * suitMultipliers[suit];
             }
           } else if (isCurrentOutPlayer) {
-            score = outType === 'joker' ? -500 : -100;
+            // Logic for 'Chift met joker' and 'Joker'
+            if (outType === 'chift') {
+              score = -1000;
+            } else {
+              score = outType === 'joker' ? -500 : -100;
+            }
           } else if (isPlayerOnOutTeam) {
             score = 0;
           } else {
             const leftover = leftoverCards[playerIndex];
-            if (!isNaN(leftover) && leftover > 0 && suitMultipliers[suit]) {
-              score = leftover * suitMultipliers[suit];
+            if (!isNaN(leftover) && leftover > 0) {
+              // Check outType to determine the multiplier
+              let multiplier = suitMultipliers[suit];
+              if (outType === 'joker') {
+                multiplier *= 2;
+              } else if (outType === 'chift') {
+                multiplier = chiftMultiplier;
+              }
+              score = leftover * multiplier;
             }
           }
 
@@ -336,6 +351,10 @@
         const currentOutPlayer = newRoundData[roundIndex].outPlayer;
         newRoundData[roundIndex].outPlayer = currentOutPlayer === playerIndex ? null : playerIndex;
         newRoundData[roundIndex].isNobodyOut = false; // Reset the nobody out flag when someone wins
+        // Reset outType to default if a new player is selected
+        if(newRoundData[roundIndex].outPlayer !== null) {
+          newRoundData[roundIndex].outType = 'standaard';
+        }
         setRoundData(newRoundData);
       };
 
@@ -422,10 +441,11 @@
                 <p>Nu de ronde-instellingen zijn vastgelegd, kun je de score per speler toevoegen.</p>
                 <ul>
                   <li><strong>Speler met de trofee (🏆):</strong> Klik op de trofee-knop naast de naam van de speler die de ronde heeft gewonnen (de speler die 'uit' is gegaan).</li>
-                  <li><strong>Type out:</strong> Als een speler 'uit' is, verschijnen er twee knoppen eronder: **'Standaard'** en **'Joker'**. Klik op de juiste knop om het type out in te stellen. De actieve knop heeft een blauwe achtergrond.
+                  <li><strong>Type out:</strong> Als een speler 'uit' is, verschijnen er drie knoppen eronder: **'Standaard'**, **'Joker'** en **'Chift met joker'**. Klik op de juiste knop om het type out in te stellen. De actieve knop heeft een blauwe achtergrond.
                     <ul>
                       <li>**Standaard:** De speler krijgt **-100** punten.</li>
                       <li>**Joker:** De speler krijgt **-500** punten.</li>
+                      <li>**Chift met joker:** De speler krijgt **-1000** punten.</li>
                     </ul>
                   </li>
                   <li><strong>Niemand Uit:</strong> Als niemand de ronde heeft gewonnen, klik je op de knop **'Niemand Uit'**. De score wordt dan voor elke speler berekend op basis van hun restkaarten.</li>
@@ -557,12 +577,15 @@
                         const cardInfo = suitDetails[round.suit];
                         const kistergePlayerName = activePlayerNames[round.kistergePlayer] || 'Geen';
                         
-                        // New conditional class for the "gedraaide kaart" select element
+                        // Nieuwe conditionele class voor het eerste invoerveld "Gedraaide kaart"
                         const selectHighlightClass = isCurrentRound && !isRoundPlayable ? 'attention-pulse' : '';
                         
-                        // New conditional class for the trophy buttons
+                        // Nieuwe conditionele class voor de trofee knoppen
                         const buttonPulseClass = isCurrentRound && isRoundPlayable && round.outPlayer === null && round.isNobodyOut === false ? 'attention-pulse' : '';
                         const hasOutPlayer = round.outPlayer !== null || round.isNobodyOut;
+
+                        // Bepaal de weergegeven multiplier
+                        const displayedMultiplier = round.outType === 'joker' ? suitMultipliers[round.suit] * 2 : round.outType === 'chift' ? chiftMultiplier : suitMultipliers[round.suit];
 
                         return (
                           <tr key={roundIndex}>
@@ -571,6 +594,7 @@
                               {isRoundPlayable && (
                                 <div className="card-display">
                                   <span className={`card-suit ${cardInfo.color}`}>{cardInfo.emoji}</span>
+                                  <span className="card-value">x{displayedMultiplier}</span>
                                 </div>
                               )}
                               <div id={`round-settings-${roundIndex}`} className="mt-1 space-y-1 text-xs">
@@ -640,6 +664,7 @@
                               const outType = round.outType;
                               const standardBtnClass = outType === 'standaard' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
                               const jokerBtnClass = outType === 'joker' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
+                              const chiftBtnClass = outType === 'chift' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700';
                               const buttonSymbol = isOutPlayer || isPlayerOnOutTeam ? '🏆' : (round.outPlayer !== null ? '❌' : '🏆');
                               const buttonClass = isOutPlayer || isPlayerOnOutTeam ? 'bg-green-500' : (round.outPlayer !== null ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700');
                               const winningTeamCellClass = isPlayerOnOutTeam ? 'winning-team-cell' : '';
@@ -664,7 +689,7 @@
                                     )}
 
                                     {isCurrentRound && round.outPlayer !== null ? (
-                                      <div id={`out-details-${playerIndex}-${roundIndex}`} className={`out-details mt-1 space-y-1 flex justify-center ${isOutPlayer ? '' : 'hidden'}`}>
+                                      <div id={`out-details-${playerIndex}-${roundIndex}`} className={`out-details mt-1 space-y-1 flex flex-wrap justify-center ${isOutPlayer ? '' : 'hidden'}`}>
                                         <button
                                           id={`standaard-btn-${roundIndex}`}
                                           onClick={() => setOutType(roundIndex, 'standaard')}
@@ -676,10 +701,18 @@
                                         <button
                                           id={`joker-btn-${roundIndex}`}
                                           onClick={() => setOutType(roundIndex, 'joker')}
-                                          className={`px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${jokerBtnClass}`}
+                                          className={`px-1 py-0.5 text-xs border-r-0 font-bold transition-colors duration-200 ease-in-out ${jokerBtnClass}`}
                                           disabled={!isRoundPlayable}
                                         >
                                           Joker
+                                        </button>
+                                        <button
+                                          id={`chift-btn-${roundIndex}`}
+                                          onClick={() => setOutType(roundIndex, 'chift')}
+                                          className={`px-1 py-0.5 text-xs rounded-r-lg border font-bold transition-colors duration-200 ease-in-out ${chiftBtnClass}`}
+                                          disabled={!isRoundPlayable}
+                                        >
+                                          Chift met joker
                                         </button>
                                       </div>
                                     ) : isCurrentRound && isOutPlayer && !round.isNobodyOut ? null : isOutPlayer && (
