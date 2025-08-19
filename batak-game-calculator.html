@@ -170,7 +170,7 @@
       const [isGameStarted, setIsGameStarted] = useState(false);
       const [gameMode, setGameMode] = useState('solo');
       const [playerCount, setPlayerCount] = useState(4);
-      const [minBid, setMinBid] = useState(6);
+      const [minBid, setMinBid] = useState(7);
       const [maxBid, setMaxBid] = useState(13);
       const [hasBonusTricks, setHasBonusTricks] = useState(false);
       const [playerCountError, setPlayerCountError] = useState(false);
@@ -281,11 +281,28 @@
         setGameMode(newGameMode);
         if (newGameMode === 'teams') {
           setPlayerCount(4);
+          setMinBid(7);
+          setMaxBid(13);
+        }
+        if (newGameMode === 'solo' && playerCount === 4) {
+          setMinBid(7);
+          setMaxBid(13);
+        }
+        if (newGameMode === 'solo' && playerCount === 3) {
+          setMinBid(7);
+          setMaxBid(16);
         }
       };
       
       const handlePlayerCountChange = (newPlayerCount) => {
         setPlayerCount(newPlayerCount);
+        if (newPlayerCount === 3) {
+          setMinBid(7);
+          setMaxBid(16);
+        } else {
+          setMinBid(7);
+          setMaxBid(13);
+        }
       };
       
       const handleMinBidChange = (newMinBid) => {
@@ -337,7 +354,7 @@
         setIsGameStarted(false);
         setGameMode('solo');
         setPlayerCount(4);
-        setMinBid(6);
+        setMinBid(7);
         setMaxBid(13);
         setHasBonusTricks(false);
         setBids([]);
@@ -472,8 +489,8 @@
             {/* Spelinstellingen */}
             <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
-              <div className="flex flex-wrap items-center justify-around gap-4 mb-4">
-                <div className="w-full md:w-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Spelmodus:</label>
                     <div className="flex space-x-2">
                       <button onClick={() => handleGameModeChange('solo')} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${gameMode === 'solo' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} disabled={isGameStarted}>
@@ -484,13 +501,13 @@
                       </button>
                     </div>
                   </div>
-                  <div className="w-full md:w-auto">
+                  <div className="flex flex-col justify-between">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Aantal spelers:</label>
                     <div className="flex space-x-2">
-                      <button onClick={() => handlePlayerCountChange(3)} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${playerCount === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} disabled={isGameStarted || gameMode === 'teams'}>
+                      <button onClick={() => handlePlayerCountChange(3)} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${playerCount === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} ${gameMode === 'teams' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={isGameStarted || gameMode === 'teams'}>
                         3 spelers
                       </button>
-                      <button onClick={() => handlePlayerCountChange(4)} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${playerCount === 4 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} disabled={isGameStarted || gameMode === 'teams'}>
+                      <button onClick={() => handlePlayerCountChange(4)} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${playerCount === 4 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} disabled={isGameStarted}>
                         4 spelers
                       </button>
                     </div>
@@ -534,8 +551,8 @@
                 <div>
                   <label htmlFor="bonus-tricks-checkbox" className="block text-sm font-bold text-blue-700">Slagpunten behouden</label>
                   <p className="text-xs text-blue-500 mt-1">
-                    <span className="font-bold">Aangevinkt:</span> Als je 7 biedt en 9 slagen pakt, is je score +9.<br />
-                    <span className="font-bold">Niet aangevinkt:</span> Als je 7 biedt en 9 slagen pakt, is je score +7.
+                    <span className="font-bold">Aangevinkt:</span> Als je 7 biedt en 13 slagen pakt, is je score +13.<br />
+                    <span className="font-bold">Niet aangevinkt:</span> Als je 7 biedt en 13 slagen pakt, blijft je score +7.
                   </p>
                 </div>
               </div>
