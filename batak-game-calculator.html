@@ -159,6 +159,7 @@
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-2">
   <div id="root"></div>
 
+  {/* Het script tag met type="text/babel" vertelt Babel dat de JSX-code getranspileerd moet worden */}
   <script type="text/babel">
     const { useState, useEffect } = React;
 
@@ -325,7 +326,7 @@
       };
       
       const handleStartGame = () => {
-        const filteredNames = playerNames.filter(name => name.trim() !== '');
+        const filteredNames = playerNames.slice(0, playerCount).filter(name => name.trim() !== '');
         if (filteredNames.length !== playerCount) {
           setPlayerCountError(true);
           return;
@@ -339,7 +340,7 @@
       };
       
       const handleUpdateGame = () => {
-        const filteredNames = playerNames.filter(name => name.trim() !== '');
+        const filteredNames = playerNames.slice(0, playerCount).filter(name => name.trim() !== '');
         if (filteredNames.length !== playerCount) {
           setPlayerCountError(true);
           return;
@@ -424,8 +425,8 @@
 
       const handleCalculateScore = (biddingPlayerIndex, roundIndex) => {
         // Collect tricks from all players, treating null as 0
-        const currentRoundTricks = playerNames.map((_, playerIndex) => {
-            const trickCount = tricks[playerIndex][roundIndex];
+        const currentRoundTricks = playerNames.slice(0, playerCount).map((_, playerIndex) => {
+            const trickCount = tricks[playerIndex] ? tricks[playerIndex][roundIndex] : null;
             return trickCount !== null ? trickCount : 0;
         });
 
@@ -437,8 +438,8 @@
         }
         
         const newScores = [...scores];
-        playerNames.forEach((_, playerIndex) => {
-          const bid = bids[playerIndex][roundIndex];
+        playerNames.slice(0, playerCount).forEach((_, playerIndex) => {
+          const bid = bids[playerIndex] ? bids[playerIndex][roundIndex] : null;
           const trickCount = currentRoundTricks[playerIndex];
           if (playerIndex === biddingPlayerIndex) {
             // Bereken de score van de biedende speler
@@ -457,7 +458,7 @@
       };
 
       // Bereken de totale scores voor de voettekst
-      const totalScores = playerNames.map((_, pIndex) =>
+      const totalScores = playerNames.slice(0, playerCount).map((_, pIndex) =>
         scores[pIndex] ? scores[pIndex].reduce((sum, score) => sum + (score || 0), 0) : 0
       );
 
@@ -537,7 +538,7 @@
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                {Array.from({ length: playerCount }).map((_, index) => (
+                {playerNames.slice(0, playerCount).map((name, index) => (
                   <div key={index} className="player-card bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
                     <label className="block text-sm font-medium text-gray-700 mb-2">Speler {index + 1}:</label>
                     <input type="text" id={`player-name-${index + 1}`} className="block w-full px-3 py-1.5 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm" placeholder={`Speler ${index + 1}`} value={playerNames[index] || ''} onChange={(e) => handlePlayerNameChange(index, e.target.value)} disabled={isGameStarted} />
@@ -551,7 +552,7 @@
                   <label htmlFor="bonus-tricks-checkbox" className="block text-sm font-bold text-blue-700">Slagpunten behouden</label>
                   <p className="text-xs text-blue-500 mt-1">
                     <span className="font-bold">Aangevinkt:</span> Als je 7 biedt en 13 slagen pakt, is je score +13.<br />
-                    <span className="font-bold">Niet aangevinkt:</span> Als je 7 biedt en 13 slagen pakt, blijft je score +7.
+                    <span className="font-bold">Niet aangevinkt:</span> Als je 7 biedt en 13 slagen pakt, is je score +7.
                   </p>
                 </div>
               </div>
@@ -583,8 +584,8 @@
                   <thead>
                     <tr>
                       <th className="rounded-tl-2xl">Ronde</th>
-                      {playerNames.map((name, index) => (
-                        <th key={index} className={`text-sm ${index === playerNames.length - 1 ? 'rounded-tr-2xl' : ''}`}>
+                      {playerNames.slice(0, playerCount).map((name, index) => (
+                        <th key={index} className={`text-sm ${index === playerCount - 1 ? 'rounded-tr-2xl' : ''}`}>
                           {name}
                         </th>
                       ))}
@@ -604,7 +605,7 @@
                               <span className="text-xs font-normal text-gray-500 mt-1">Dealer: {playerNames[dealerIndex]}</span>
                             </div>
                           </td>
-                          {playerNames.map((_, playerIndex) => {
+                          {playerNames.slice(0, playerCount).map((_, playerIndex) => {
                             const bid = bids[playerIndex] && bids[playerIndex][roundIndex];
                             const trickCount = tricks[playerIndex] && tricks[playerIndex][roundIndex];
                             const score = scores[playerIndex] && scores[playerIndex][roundIndex];
@@ -651,10 +652,10 @@
                   <tfoot>
                     <tr>
                       <td className="font-bold text-sm bg-gray-900 text-white rounded-bl-2xl">Totaal</td>
-                      {totalScores.map((total, index) => {
+                      {totalScores.slice(0, playerCount).map((total, index) => {
                         const scoreClass = total > 0 ? 'score-win' : total < 0 ? 'score-lose' : 'score-zero';
                         return (
-                          <td key={index} className={`text-lg font-bold text-center ${scoreClass} ${index === playerNames.length - 1 ? 'rounded-br-2xl' : ''}`}>
+                          <td key={index} className={`text-lg font-bold text-center ${scoreClass} ${index === playerCount - 1 ? 'rounded-br-2xl' : ''}`}>
                             {total}
                           </td>
                         );
