@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=0.6, user-scalable=no">
   <title>Supër Score Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React and Babel are loaded from CDNs to enable JSX in the browser -->
@@ -154,6 +154,7 @@
       const [playerCountError, setPlayerCountError] = useState(false);
       const [roundData, setRoundData] = useState([]);
       const [playerScores, setPlayerScores] = useState([]);
+      const [loading, setLoading] = useState(true);
 
       // Game configuration constants
       const suitMultipliers = {
@@ -240,6 +241,55 @@
         setPlayerScores(newPlayerScores);
       };
 
+      // Function to save data to local storage
+      const saveDataToLocalStorage = (data) => {
+        try {
+          localStorage.setItem('gameSession', JSON.stringify(data));
+        } catch (e) {
+          console.error("Error saving to local storage: ", e);
+        }
+      };
+
+      // Function to load data from local storage
+      const loadDataFromLocalStorage = () => {
+        try {
+          const storedData = localStorage.getItem('gameSession');
+          if (storedData) {
+            const data = JSON.parse(storedData);
+            setPlayerNames(data.playerNames);
+            setActivePlayerNames(data.activePlayerNames);
+            setIsGameStarted(data.isGameStarted);
+            setIsTeamMode(data.isTeamMode);
+            setRoundData(data.roundData);
+            setPlayerScores(data.playerScores);
+          }
+        } catch (e) {
+          console.error("Error loading from local storage: ", e);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Effect to load data on initial render
+      useEffect(() => {
+        loadDataFromLocalStorage();
+      }, []);
+
+      // Effect to save data whenever game state changes
+      useEffect(() => {
+        if (!loading && isGameStarted) {
+          const dataToSave = {
+            playerNames,
+            activePlayerNames,
+            isGameStarted,
+            isTeamMode,
+            roundData,
+            playerScores,
+          };
+          saveDataToLocalStorage(dataToSave);
+        }
+      }, [playerNames, activePlayerNames, isGameStarted, isTeamMode, roundData, playerScores, loading]);
+
       // Event handler for player name input changes
       const handlePlayerNameChange = (index, value) => {
         const newPlayerNames = [...playerNames];
@@ -305,6 +355,7 @@
         setPlayerCountError(false);
         setRoundData([]);
         setPlayerScores([]);
+        localStorage.removeItem('gameSession');
       };
 
       // Event handler for adding a new round
