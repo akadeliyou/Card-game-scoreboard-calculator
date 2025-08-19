@@ -229,7 +229,18 @@
       useEffect(() => {
         const savedState = localStorage.getItem('batakGameState');
         if (savedState) {
-          setShowStartPopup(true);
+          try {
+            const gameState = JSON.parse(savedState);
+            if (gameState.isGameStarted) {
+                setShowStartPopup(true);
+            } else {
+                setLoading(false);
+            }
+          } catch (e) {
+            console.error("Error parsing stored game state:", e);
+            localStorage.removeItem('batakGameState');
+            setLoading(false);
+          }
         } else {
           setLoading(false);
         }
