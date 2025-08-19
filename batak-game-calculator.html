@@ -172,7 +172,7 @@
       const [playerCount, setPlayerCount] = useState(4);
       const [minBid, setMinBid] = useState(7);
       const [maxBid, setMaxBid] = useState(13);
-      const [hasBonusTricks, setHasBonusTricks] = useState(false);
+      const [hasBonusTricks, setHasBonusTricks] = useState(true);
       const [playerCountError, setPlayerCountError] = useState(false);
       const [bids, setBids] = useState([]);
       const [tricks, setTricks] = useState([]);
@@ -489,8 +489,8 @@
             {/* Spelinstellingen */}
             <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Spelinstellingen</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div className="col-span-1 md:col-span-2 flex flex-col justify-between">
+              <div className="flex flex-wrap items-center justify-around gap-4 mb-4">
+                <div className="w-full md:w-auto">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Spelmodus:</label>
                     <div className="flex space-x-2">
                       <button onClick={() => handleGameModeChange('solo')} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${gameMode === 'solo' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} disabled={isGameStarted}>
@@ -501,7 +501,7 @@
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-col justify-between">
+                  <div className="w-full md:w-auto">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Aantal spelers:</label>
                     <div className="flex space-x-2">
                       <button onClick={() => handlePlayerCountChange(3)} className={`py-1.5 px-4 rounded-lg font-bold transition-colors text-sm ${playerCount === 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'} ${gameMode === 'teams' ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={isGameStarted || gameMode === 'teams'}>
