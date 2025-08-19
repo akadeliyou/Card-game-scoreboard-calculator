@@ -289,6 +289,16 @@
           saveDataToLocalStorage(dataToSave);
         }
       }, [playerNames, activePlayerNames, isGameStarted, isTeamMode, roundData, playerScores, loading]);
+      
+      // New effect to scroll to the scoreboard when the game starts or is loaded
+      useEffect(() => {
+          if (isGameStarted) {
+              const scoreboard = document.getElementById('score-container');
+              if (scoreboard) {
+                  scoreboard.scrollIntoView({ behavior: 'smooth' });
+              }
+          }
+      }, [isGameStarted]);
 
       // Event handler for player name input changes
       const handlePlayerNameChange = (index, value) => {
@@ -320,6 +330,14 @@
         }];
         setRoundData(initialRoundData);
         setPlayerScores(Array(activeNames.length).fill(null).map(() => [0]));
+        
+        // Scroll to the scoreboard
+        setTimeout(() => {
+            const scoreboard = document.getElementById('score-container');
+            if (scoreboard) {
+                scoreboard.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 100);
       };
 
       // Event handler for updating game settings
