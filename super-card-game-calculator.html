@@ -503,7 +503,7 @@
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 2: Een nieuwe ronde starten</h3>
                 <p>Het scorebord begint met de eerste ronde. Voordat je scores kunt invoeren, moet je de ronde-instellingen bepalen.</p>
                 <ul>
-                  <li><strong>Gedraaide kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de gedraaide kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
+                  <li><strong>Open kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de Open kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
                   <li><strong>Speler met "Kisterge":</strong> Selecteer de speler die "Kisterge" heeft uit het tweede dropdown-menu. Als dit niet van toepassing is, laat je de optie op 'Geen' staan.</li>
                 </ul>
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 3: Scores toevoegen</h3>
@@ -646,7 +646,7 @@
                         const cardInfo = suitDetails[round.suit];
                         const kistergePlayerName = activePlayerNames[round.kistergePlayer] || 'Geen';
                         
-                        // Nieuwe conditionele class voor het eerste invoerveld "Gedraaide kaart"
+                        // Nieuwe conditionele class voor het eerste invoerveld "Open kaart"
                         const selectHighlightClass = isCurrentRound && !isRoundPlayable ? 'attention-pulse' : '';
                         
                         // Nieuwe conditionele class voor de trofee knoppen
