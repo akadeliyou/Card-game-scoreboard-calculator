@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=0.6, user-scalable=no">
   <title>Schoppenjagen (Batak) Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -385,20 +385,32 @@
       };
 
       const handleCalculateScore = (biddingPlayerIndex, roundIndex) => {
-        const totalTricksInRound = tricks.map(playerTricks => playerTricks[roundIndex] || 0).reduce((sum, val) => sum + val, 0);
+        // Collect tricks from all players, treating null as 0
+        const currentRoundTricks = playerNames.map((_, playerIndex) => {
+            const trickCount = tricks[playerIndex][roundIndex];
+            return trickCount !== null ? trickCount : 0;
+        });
+
+        const totalTricksInRound = currentRoundTricks.reduce((sum, val) => sum + val, 0);
 
         if (totalTricksInRound !== totalTricksInGame) {
-          setValidationError(`Fout: Het totaal aantal slagen moet ${totalTricksInGame} zijn.`);
+          setValidationError(`Fout: Het totaal aantal slagen moet ${totalTricksInGame} zijn. Huidig totaal: ${totalTricksInRound}`);
           return;
         }
         
         const newScores = [...scores];
         playerNames.forEach((_, playerIndex) => {
           const bid = bids[playerIndex][roundIndex];
-          const trickCount = tricks[playerIndex][roundIndex];
+          const trickCount = currentRoundTricks[playerIndex];
           if (playerIndex === biddingPlayerIndex) {
-            newScores[playerIndex][roundIndex] = (trickCount >= bid) ? (hasBonusTricks ? trickCount : bid) : -bid;
+            // Bereken de score van de biedende speler
+            if (trickCount >= bid) {
+              newScores[playerIndex][roundIndex] = hasBonusTricks ? trickCount : bid;
+            } else {
+              newScores[playerIndex][roundIndex] = -bid;
+            }
           } else {
+            // De score van andere spelers is gelijk aan hun aantal slagen
             newScores[playerIndex][roundIndex] = trickCount;
           }
         });
@@ -410,6 +422,9 @@
       const totalScores = playerNames.map((_, pIndex) =>
         scores[pIndex] ? scores[pIndex].reduce((sum, score) => sum + (score || 0), 0) : 0
       );
+
+      const biddingPlayerIndexInRound = bids.findIndex(playerBids => playerBids[numRounds - 1] !== null);
+      const isRoundLocked = scores.some(playerScores => playerScores[numRounds - 1] !== null);
 
       return (
         <>
@@ -469,9 +484,11 @@
               <div>
                 <div className="flex items-center space-x-2">
                   <input id="bonus-tricks-checkbox" type="checkbox" className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" checked={hasBonusTricks} onChange={(e) => setHasBonusTricks(e.target.checked)} disabled={isGameStarted} />
-                  <label htmlFor="bonus-tricks-checkbox" className="block text-sm font-bold text-gray-700">Slagpunten gelijkhouden</label>
+                  <label htmlFor="bonus-tricks-checkbox" className="block text-sm font-bold text-gray-700">Slagpunten bij overbieden gelijk houden</label>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Als dit is aangevinkt, is het bod de maximale punten die je kunt krijgen, ook als je meer slagen pakt.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Als dit is aangevinkt, krijg je het geboden aantal punten als je het bod haalt, ook als je meer slagen pakt.
+                </p>
               </div>
 
               {playerCountError && (
@@ -494,7 +511,7 @@
             <div id="score-container" className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
               {validationError && (
-                <div id="validation-message-box" className="mt-2 p-3 bg-red-100 text-red-700 font-bold rounded-lg">{validationError}</div>
+                <div id="validation-message-box" className={`mt-2 p-3 font-bold rounded-lg ${validationError.startsWith('Fout') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>{validationError}</div>
               )}
               <div className="overflow-x-auto">
                 <table id="score-table" className="w-full text-left rounded-2xl shadow-md overflow-hidden">
@@ -511,6 +528,9 @@
                   <tbody>
                     {Array.from({ length: numRounds }).map((_, roundIndex) => {
                       const dealerIndex = roundIndex % playerCount;
+                      const biddingPlayerIndexInRound = bids.findIndex(playerBids => playerBids[roundIndex] !== null);
+                      const isTricksPhase = biddingPlayerIndexInRound !== -1 && scores.every(playerScores => playerScores[roundIndex] === null);
+
                       return (
                         <tr key={roundIndex}>
                           <td className="font-bold text-sm">
@@ -524,7 +544,6 @@
                             const trickCount = tricks[playerIndex] && tricks[playerIndex][roundIndex];
                             const score = scores[playerIndex] && scores[playerIndex][roundIndex];
                             const isBiddingPhase = bids.every(playerBids => playerBids[roundIndex] === null);
-                            const isTricksPhase = !isBiddingPhase && scores.every(playerScores => playerScores[roundIndex] === null);
                             
                             return (
                               <td key={playerIndex}>
@@ -534,16 +553,23 @@
                                   )}
                                   {isTricksPhase && (
                                     <>
-                                      <div className="text-sm font-bold text-gray-700">Bod: {bid}</div>
+                                      {playerIndex === biddingPlayerIndexInRound ? (
+                                        <div className="text-sm font-bold text-gray-700">Bod: {bid}</div>
+                                      ) : null}
+                                      
                                       <div className="input-container">
                                         <input type="number" className="block px-1.5 py-0.5 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs tricks-input w-24" placeholder="Slagen" min="0" max={totalTricksInGame} value={trickCount || ''} onChange={(e) => handleTricksInput(e, playerIndex, roundIndex)} />
                                       </div>
-                                      <button onClick={() => handleCalculateScore(playerIndex, roundIndex)} className="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>
+                                      {biddingPlayerIndexInRound === playerIndex && (
+                                          <button onClick={() => handleCalculateScore(playerIndex, roundIndex)} className="py-1 px-2 bg-blue-500 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-600">Bereken Score</button>
+                                      )}
                                     </>
                                   )}
                                   {!isBiddingPhase && !isTricksPhase && (
                                     <>
-                                      <div className="text-sm font-bold text-gray-700">Bod: {bid}, Slagen: {trickCount}</div>
+                                      <div className="text-sm font-bold text-gray-700">
+                                        {bid !== null ? `Bod: ${bid}, Slagen: ${trickCount}` : `Slagen: ${trickCount}`}
+                                      </div>
                                       <div className={`text-lg font-bold ${score > 0 ? 'score-win' : score < 0 ? 'score-lose' : 'score-zero'}`}>
                                         {score > 0 ? `+${score}` : score}
                                       </div>
