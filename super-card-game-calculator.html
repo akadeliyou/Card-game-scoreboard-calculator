@@ -10,63 +10,6 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Firebase scripts -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Global variables for Firebase
-    window.initializeApp = initializeApp;
-    window.getAuth = getAuth;
-    window.signInAnonymously = signInAnonymously;
-    window.signInWithCustomToken = signInWithCustomToken;
-    window.onAuthStateChanged = onAuthStateChanged;
-    window.getFirestore = getFirestore;
-    window.doc = doc;
-    window.getDoc = getDoc;
-    window.setDoc = setDoc;
-    window.onSnapshot = onSnapshot;
-
-    const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    let userId = null;
-    let authReadyPromise = new Promise(resolve => {
-        if (typeof __initial_auth_token !== 'undefined') {
-            signInWithCustomToken(auth, __initial_auth_token)
-                .then(() => {
-                    userId = auth.currentUser?.uid;
-                    resolve(true);
-                })
-                .catch(error => {
-                    console.error("Error signing in with custom token:", error);
-                    signInAnonymously(auth)
-                        .then(() => {
-                            userId = auth.currentUser?.uid;
-                            resolve(true);
-                        });
-                });
-        } else {
-            signInAnonymously(auth)
-                .then(() => {
-                    userId = auth.currentUser?.uid;
-                    resolve(true);
-                });
-        }
-    });
-
-    window.firebase = {
-      db: db,
-      auth: auth,
-      getUserId: () => userId,
-      authReady: authReadyPromise,
-      appId: typeof __app_id !== 'undefined' ? __app_id : 'default-app-id',
-    };
-  </script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
     body {
@@ -211,8 +154,6 @@
       const [playerCountError, setPlayerCountError] = useState(false);
       const [roundData, setRoundData] = useState([]);
       const [playerScores, setPlayerScores] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [lastSaved, setLastSaved] = useState(null);
 
       // Game configuration constants
       const suitMultipliers = {
@@ -298,67 +239,6 @@
 
         setPlayerScores(newPlayerScores);
       };
-
-      // Function to save data to Firestore
-      const saveDataToFirestore = async (data) => {
-        try {
-          await window.firebase.authReady;
-          const userId = window.firebase.getUserId();
-          if (userId) {
-            const docRef = window.doc(window.firebase.db, `artifacts/${window.firebase.appId}/users/${userId}/gameData/gameSession`);
-            await window.setDoc(docRef, { ...data, timestamp: window.getFirestore.serverTimestamp() });
-            setLastSaved(new Date());
-          }
-        } catch (e) {
-          console.error("Error saving document: ", e);
-        }
-      };
-
-      // Function to load data from Firestore
-      const loadDataFromFirestore = async () => {
-        setLoading(true);
-        try {
-          await window.firebase.authReady;
-          const userId = window.firebase.getUserId();
-          if (userId) {
-            const docRef = window.doc(window.firebase.db, `artifacts/${window.firebase.appId}/users/${userId}/gameData/gameSession`);
-            const docSnap = await window.getDoc(docRef);
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setPlayerNames(data.playerNames);
-              setActivePlayerNames(data.activePlayerNames);
-              setIsGameStarted(data.isGameStarted);
-              setIsTeamMode(data.isTeamMode);
-              setRoundData(data.roundData);
-              setPlayerScores(data.playerScores);
-            }
-          }
-        } catch (e) {
-          console.error("Error loading document: ", e);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      // Effect to load data on initial render
-      useEffect(() => {
-        loadDataFromFirestore();
-      }, []);
-
-      // Effect to save data whenever game state changes
-      useEffect(() => {
-        if (!loading && isGameStarted) {
-          const dataToSave = {
-            playerNames,
-            activePlayerNames,
-            isGameStarted,
-            isTeamMode,
-            roundData,
-            playerScores,
-          };
-          saveDataToFirestore(dataToSave);
-        }
-      }, [playerNames, activePlayerNames, isGameStarted, isTeamMode, roundData, playerScores, loading]);
 
       // Event handler for player name input changes
       const handlePlayerNameChange = (index, value) => {
@@ -676,10 +556,6 @@
             {isGameStarted && (
               <div id="score-container" className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">Scorebord</h2>
-                <p className="text-xs text-gray-500 mb-2">
-                    <span className="font-bold">Gebruikers-ID:</span> {window.firebase.getUserId()}
-                    {lastSaved && <span className="ml-4">Laatst opgeslagen: {lastSaved.toLocaleTimeString()}</span>}
-                </p>
                 <div className="overflow-x-auto">
                   <table id="score-table" className="w-full text-left rounded-2xl shadow-md overflow-hidden">
                     <thead>
