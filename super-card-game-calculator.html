@@ -827,9 +827,9 @@
                     </tbody>
                     <tfoot>
                       <tr>
-                        <td className="font-bold text-sm bg-gray-100">Speler</td>
+                        <td className="font-bold text-sm bg-gray-900 text-white">Speler</td>
                         {activePlayerNames.map((name, playerIndex) => (
-                          <td key={playerIndex} className="font-bold text-sm text-center bg-gray-100">{name}</td>
+                          <td key={playerIndex} className={`font-bold text-sm text-center text-white ${isTeamMode && getPlayerTeamIndex(playerIndex) === 1 ? 'team-b-header' : 'team-a-header'}`}>{name}</td>
                         ))}
                       </tr>
                       <tr>
@@ -838,8 +838,16 @@
                           const total = playerScores[playerIndex]?.reduce((sum, score) => sum + (score || 0), 0) ?? 0;
                           const cornerClass = playerIndex === activePlayerNames.length - 1 ? 'rounded-br-2xl' : '';
                           const teamHeaderClass = isTeamMode && getPlayerTeamIndex(playerIndex) === 1 ? 'team-b-header' : 'team-a-header';
+                          
+                          // Bepaal wie de laagste score heeft (beste score)
+                          const totals = playerScores.map(scores => scores.reduce((sum, score) => sum + (score || 0), 0));
+                          const minScore = Math.min(...totals);
+                          const isWinner = total === minScore && minScore < 0; // Alleen groen als de score negatief is
+
+                          const totalCellClass = isWinner ? 'bg-green-500' : (total >= 0 ? 'bg-red-500' : 'bg-gray-400');
+
                           return (
-                            <td key={playerIndex} className={`text-lg font-bold text-center text-white ${teamHeaderClass} ${cornerClass}`}>{total}</td>
+                            <td key={playerIndex} className={`text-lg font-bold text-center text-white ${totalCellClass} ${cornerClass}`}>{total}</td>
                           );
                         })}
                       </tr>
