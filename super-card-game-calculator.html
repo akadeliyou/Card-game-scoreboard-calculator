@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=0.6, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=0.7, user-scalable=no">
   <title>Supër Score Calculator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React and Babel are loaded from CDNs to enable JSX in the browser -->
@@ -134,6 +134,29 @@
     #instruction-content.collapsed {
       max-height: 6rem; /* Toont een paar regels van de uitleg */
     }
+    
+    /* Popup styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    .modal-content {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 90%;
+      width: 400px;
+    }
   </style>
 </head>
 <body>
@@ -155,6 +178,7 @@
       const [roundData, setRoundData] = useState([]);
       const [playerScores, setPlayerScores] = useState([]);
       const [loading, setLoading] = useState(true);
+      const [showPopup, setShowPopup] = useState(false);
 
       // Game configuration constants
       const suitMultipliers = {
@@ -270,9 +294,19 @@
         }
       };
 
-      // Effect to load data on initial render
+      // Effect to load data on initial render and show popup
       useEffect(() => {
-        loadDataFromLocalStorage();
+        try {
+          const storedData = localStorage.getItem('gameSession');
+          if (storedData) {
+            setShowPopup(true);
+          } else {
+            setLoading(false);
+          }
+        } catch (e) {
+          console.error("Error checking local storage:", e);
+          setLoading(false);
+        }
       }, []);
 
       // Effect to save data whenever game state changes
@@ -299,6 +333,18 @@
               }
           }
       }, [isGameStarted]);
+
+      // Handle continue from popup
+      const handleContinueGame = () => {
+        loadDataFromLocalStorage();
+        setShowPopup(false);
+      };
+
+      // Handle reset from popup
+      const handleResetFromPopup = () => {
+        handleResetGame();
+        setShowPopup(false);
+      };
 
       // Event handler for player name input changes
       const handlePlayerNameChange = (index, value) => {
@@ -503,7 +549,7 @@
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 2: Een nieuwe ronde starten</h3>
                 <p>Het scorebord begint met de eerste ronde. Voordat je scores kunt invoeren, moet je de ronde-instellingen bepalen.</p>
                 <ul>
-                  <li><strong>Open kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de Open kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
+                  <li><strong>Gedraaide kaart:</strong> In de eerste kolom van de tabel zie je de instellingen voor de huidige ronde. Begin met het selecteren van de gedraaide kaart uit het dropdown-menu. Dit is de troef van de ronde. De invoer verandert van een gele knipperende achtergrond naar een normale achtergrond zodra je een kaart hebt gekozen.</li>
                   <li><strong>Speler met "Kisterge":</strong> Selecteer de speler die "Kisterge" heeft uit het tweede dropdown-menu. Als dit niet van toepassing is, laat je de optie op 'Geen' staan.</li>
                 </ul>
                 <h3 className="text-lg font-bold mt-4 mb-2">Stap 3: Scores toevoegen</h3>
@@ -532,8 +578,35 @@
         );
       };
 
+      // Popup component for a saved game session
+      const GameSessionPopup = ({ onContinue, onReset }) => {
+          return (
+              <div className="modal-overlay">
+                  <div className="modal-content">
+                      <h3 className="text-xl font-bold mb-4">Opgeslagen spel gevonden!</h3>
+                      <p className="mb-6">Er staat nog een spel open in je browser. Wil je doorgaan waar je gebleven was, of een nieuw spel starten?</p>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 justify-center">
+                          <button
+                              onClick={onContinue}
+                              className="w-full sm:w-auto py-2 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-colors"
+                          >
+                              Doorgaan
+                          </button>
+                          <button
+                              onClick={onReset}
+                              className="w-full sm:w-auto py-2 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition-colors"
+                          >
+                              Reset huidige spel
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          );
+      };
+
       return (
         <>
+          {showPopup && <GameSessionPopup onContinue={handleContinueGame} onReset={handleResetFromPopup} />}
           <div className="w-full flex flex-col items-center min-h-screen p-2">
             {/* Header and description */}
             <div className="bg-white p-4 rounded-2xl shadow-xl w-full max-w-full lg:max-w-5xl mb-4">
@@ -646,7 +719,7 @@
                         const cardInfo = suitDetails[round.suit];
                         const kistergePlayerName = activePlayerNames[round.kistergePlayer] || 'Geen';
                         
-                        // Nieuwe conditionele class voor het eerste invoerveld "Open kaart"
+                        // Nieuwe conditionele class voor het eerste invoerveld "Gedraaide kaart"
                         const selectHighlightClass = isCurrentRound && !isRoundPlayable ? 'attention-pulse' : '';
                         
                         // Nieuwe conditionele class voor de trofee knoppen
@@ -673,7 +746,7 @@
                               )}
                               <div id={`round-settings-${roundIndex}`} className="mt-1 space-y-1 text-xs">
                                 <div className={`${isCurrentRound ? selectHighlightClass + ' p-1 rounded-lg' : ''}`}>
-                                  <label className="block font-medium text-gray-700">Open kaart:</label>
+                                  <label className="block font-medium text-gray-700">Gedraaide kaart:</label>
                                   {isCurrentRound ? (
                                     <select
                                       id={`suit-${roundIndex}`}
@@ -692,7 +765,7 @@
                                   )}
                                 </div>
                                 <div>
-                                  <label className="block font-medium text-gray-700">Kisterge:</label>
+                                  <label className="block font-medium text-gray-700">Speler met "Kisterge":</label>
                                   {isCurrentRound ? (
                                     <select
                                       id={`kisterge-player-${roundIndex}`}
